@@ -22,10 +22,33 @@ class Booking_Form {
 		wp_add_inline_style( 'pb-front', '.pb-booking,.pb-account{--pb-accent:' . ( sanitize_hex_color( Settings::get( 'accent_color' ) ) ?: '#8a6d4b' ) . ';}' );
 		wp_register_script( 'pb-picker', PB_URL . 'assets/js/slot-picker.js', array(), PB_VERSION, true );
 		wp_register_script( 'pb-booking', PB_URL . 'assets/js/booking.js', array( 'pb-picker' ), PB_VERSION, true );
+		wp_register_style( 'pb-flow-fonts', 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Libre+Franklin:wght@300;400&family=Nunito+Sans:wght@300;400;500&display=swap', array(), null ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
+		wp_register_style( 'pb-flow', PB_URL . 'assets/css/booking-flow.css', array( 'pb-flow-fonts' ), PB_VERSION );
+		wp_register_script( 'pb-flow', PB_URL . 'assets/js/booking-flow.js', array( 'pb-picker' ), PB_VERSION, true );
 		wp_localize_script( 'pb-picker', 'PB', self::js_config() );
 		if ( function_exists( 'is_account_page' ) && is_account_page() ) {
 			wp_enqueue_style( 'pb-front' );
 		}
+		if ( self::is_booking_page() ) {
+			wp_enqueue_style( 'pb-flow' );
+			wp_enqueue_script( 'pb-flow' );
+			add_filter(
+				'body_class',
+				static function ( $classes ) {
+					$classes[] = 'pb-booking-page';
+					return $classes;
+				}
+			);
+		}
+	}
+
+	/** Booking page plus the WooCommerce pages the flow passes through (checkout, account): same light header. */
+	public static function is_booking_page() {
+		$id = (int) Settings::get( 'booking_page_id' );
+		if ( $id && is_page( $id ) ) {
+			return true;
+		}
+		return function_exists( 'is_checkout' ) && ( is_checkout() || is_account_page() || is_cart() );
 	}
 
 	public static function js_config() {
@@ -58,8 +81,8 @@ class Booking_Form {
 			$atts,
 			'prenotazione'
 		);
-		wp_enqueue_style( 'pb-front' );
-		wp_enqueue_script( 'pb-booking' );
+		wp_enqueue_style( 'pb-flow' );
+		wp_enqueue_script( 'pb-flow' );
 
 		$packages = array();
 		if ( $atts['pacchetto'] ) {
@@ -94,6 +117,8 @@ class Booking_Form {
 		$values = wp_parse_args(
 			self::$values,
 			array(
+				'tier'         => sanitize_key( wp_unslash( $_GET['pacchetto_tipo'] ?? '' ) ), // phpcs:ignore WordPress.Security.NonceVerification
+				'extras'       => array(),
 				'first_name'   => $user->ID ? $user->first_name : '',
 				'last_name'    => $user->ID ? $user->last_name : '',
 				'email'        => $user->ID ? $user->user_email : '',
@@ -114,9 +139,38 @@ class Booking_Form {
 				'selected' => $selected,
 				'values'   => $values,
 				'errors'   => self::$errors,
-				'credit'   => $credit,
+				'credit'    => $credit,
+				'logged_in' => (bool) $user->ID,
+				'login_url' => wp_login_url( Settings::booking_page_url() . '#prenota-flow' ),
 			)
 		);
+	}
+
+	/**
+	 * Create the customer's account (the "Crea il tuo profilo" step) and log them in.
+	 *
+	 * @return int|\WP_Error
+	 */
+	private static function create_customer( array $v, $password ) {
+		$user_id = wc_create_new_customer(
+			$v['email'],
+			'',
+			$password,
+			array(
+				'first_name' => $v['first_name'],
+				'last_name'  => $v['last_name'],
+			)
+		);
+		if ( is_wp_error( $user_id ) ) {
+			return $user_id;
+		}
+		update_user_meta( $user_id, 'billing_first_name', $v['first_name'] );
+		update_user_meta( $user_id, 'billing_last_name', $v['last_name'] );
+		update_user_meta( $user_id, 'billing_email', $v['email'] );
+		update_user_meta( $user_id, 'billing_phone', $v['phone'] );
+		wp_set_current_user( $user_id );
+		wc_set_customer_auth_cookie( $user_id );
+		return $user_id;
 	}
 
 	private static function product_by_slug( $slug ) {
@@ -137,6 +191,8 @@ class Booking_Form {
 		}
 		$v = array(
 			'product_id'   => absint( $_POST['product_id'] ?? 0 ),
+			'tier'         => sanitize_key( wp_unslash( $_POST['tier'] ?? '' ) ),
+			'extras'       => array_map( 'sanitize_key', (array) wp_unslash( $_POST['extras'] ?? array() ) ),
 			'start'        => sanitize_text_field( wp_unslash( $_POST['start'] ?? '' ) ),
 			'mode'         => 'full' === ( $_POST['mode'] ?? '' ) ? 'full' : 'deposit',
 			'first_name'   => sanitize_text_field( wp_unslash( $_POST['first_name'] ?? '' ) ),
@@ -164,6 +220,24 @@ class Booking_Form {
 		if ( strlen( preg_replace( '/\D/', '', $v['phone'] ) ) < 6 ) {
 			self::$errors[] = __( 'Inserisci un numero di telefono valido.', 'photo-booking' );
 		}
+		if ( ! self::$errors ) {
+			$quote = Package::quote( $v['product_id'], $v['tier'], $v['extras'] );
+			if ( is_wp_error( $quote ) ) {
+				self::$errors[] = $quote->get_error_message();
+			}
+		}
+		$password = (string) wp_unslash( $_POST['password'] ?? '' ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+		if ( ! is_user_logged_in() ) {
+			if ( is_email( $v['email'] ) && email_exists( $v['email'] ) ) {
+				self::$errors[] = sprintf(
+					/* translators: %s login url */
+					__( 'Esiste già un account con questa email. <a href="%s">Accedi</a> per completare la prenotazione.', 'photo-booking' ),
+					esc_url( wp_login_url( Settings::booking_page_url() . '#prenota-flow' ) )
+				);
+			} elseif ( strlen( $password ) < 8 ) {
+				self::$errors[] = __( 'Scegli una password di almeno 8 caratteri.', 'photo-booking' );
+			}
+		}
 		if ( empty( $_POST['accept_policy'] ) ) {
 			self::$errors[] = __( 'Devi accettare le condizioni di prenotazione e disdetta.', 'photo-booking' );
 		}
@@ -179,6 +253,16 @@ class Booking_Form {
 		}
 		set_transient( 'pb_hold_' . $ip, $cnt + 1, 10 * MINUTE_IN_SECONDS );
 
+		if ( ! is_user_logged_in() ) {
+			$user_id = self::create_customer( $v, $password );
+			if ( is_wp_error( $user_id ) ) {
+				self::$errors[] = $user_id->get_error_message();
+				return;
+			}
+		} else {
+			update_user_meta( get_current_user_id(), 'billing_phone', $v['phone'] );
+		}
+
 		$appt = Bookings::create_hold(
 			$v['product_id'],
 			$v['start'],
@@ -192,7 +276,11 @@ class Booking_Form {
 					'children'     => $v['children'],
 				),
 			),
-			$v['mode']
+			$v['mode'],
+			array(
+				'tier'   => $v['tier'],
+				'extras' => $v['extras'],
+			)
 		);
 		if ( is_wp_error( $appt ) ) {
 			self::$errors[] = $appt->get_error_message();

@@ -108,6 +108,9 @@ if ( $appointment && ! in_array( $key, array( 'credit_issued' ), true ) ) {
 		$rows[ __( 'Cliente', 'photo-booking' ) ]  = $appointment->customer_name;
 		$rows[ __( 'Email', 'photo-booking' ) ]    = $appointment->customer_email;
 		$rows[ __( 'Telefono', 'photo-booking' ) ] = $appointment->customer_phone;
+		if ( $appointment->extras_label() ) {
+			$rows[ __( 'Extra', 'photo-booking' ) ] = $appointment->extras_label();
+		}
 		if ( $appointment->get_meta( 'participants' ) ) {
 			$rows[ __( 'Partecipanti', 'photo-booking' ) ] = $appointment->get_meta( 'participants' );
 		}

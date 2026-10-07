@@ -175,8 +175,20 @@ class Appointment {
 	}
 
 	public function package_name() {
-		$p = $this->product();
-		return $p ? $p->get_name() : (string) $this->get_meta( 'product_name', __( 'Pacchetto', 'photo-booking' ) );
+		$p    = $this->product();
+		$name = $p ? $p->get_name() : (string) $this->get_meta( 'product_name', __( 'Pacchetto', 'photo-booking' ) );
+		$tier = (string) $this->get_meta( 'tier_name', '' );
+		return '' !== $tier ? $name . ' – ' . $tier : $name;
+	}
+
+	/** Extras chosen with the sub-package, e.g. "Album (+150 €), 10 foto in più (+80 €)". */
+	public function extras_label() {
+		$extras = (array) $this->get_meta( 'extras', array() );
+		$out    = array();
+		foreach ( $extras as $e ) {
+			$out[] = $e['name'] . ' (+' . html_entity_decode( wp_strip_all_tags( wc_price( $e['price'] ) ), ENT_QUOTES, 'UTF-8' ) . ')';
+		}
+		return implode( ', ', $out );
 	}
 
 	public function start() {

@@ -64,6 +64,75 @@ class Package {
 			'capacity'     => max( 0, (int) $product->get_meta( '_pb_capacity' ) ),
 			'includes'     => (string) $product->get_meta( '_pb_includes' ),
 			'instructions' => (string) $product->get_meta( '_pb_instructions' ),
+			'label'        => (string) $product->get_meta( '_pb_label' ),
+			'tiers'        => self::tiers( $product ),
+			'from'         => self::from_price( $product ),
+		);
+	}
+
+	/**
+	 * Sub-packages (e.g. Standard / Medium / Premium), each with its own price and optional extras.
+	 *
+	 * @param \WC_Product|int $product
+	 * @return array[] { key, name, price, description, includes, extras: { key, name, price }[] }
+	 */
+	public static function tiers( $product ) {
+		$product = is_numeric( $product ) ? wc_get_product( $product ) : $product;
+		$tiers   = $product ? $product->get_meta( '_pb_tiers' ) : array();
+		return is_array( $tiers ) ? array_values( $tiers ) : array();
+	}
+
+	/** Lowest bookable price ("da €…"): cheapest sub-package, or the product price. */
+	public static function from_price( $product ) {
+		$product = is_numeric( $product ) ? wc_get_product( $product ) : $product;
+		if ( ! $product ) {
+			return 0.0;
+		}
+		$prices = wp_list_pluck( self::tiers( $product ), 'price' );
+		return $prices ? (float) min( $prices ) : (float) $product->get_price( 'edit' );
+	}
+
+	/**
+	 * Price of a sub-package + extras chosen by the customer.
+	 *
+	 * @param int      $product_id
+	 * @param string   $tier_key
+	 * @param string[] $extra_keys
+	 * @return array|\WP_Error { total, tier, extras }
+	 */
+	public static function quote( $product_id, $tier_key = '', array $extra_keys = array() ) {
+		$cfg = self::config( $product_id );
+		if ( ! $cfg ) {
+			return new \WP_Error( 'pb_package', __( 'Pacchetto non valido.', 'photo-booking' ) );
+		}
+		if ( ! $cfg['tiers'] ) {
+			return array(
+				'total'  => $cfg['price'],
+				'tier'   => null,
+				'extras' => array(),
+			);
+		}
+		$tier = null;
+		foreach ( $cfg['tiers'] as $t ) {
+			if ( $t['key'] === $tier_key ) {
+				$tier = $t;
+			}
+		}
+		if ( ! $tier ) {
+			return new \WP_Error( 'pb_tier', __( 'Scegli un pacchetto.', 'photo-booking' ) );
+		}
+		$extras = array();
+		$total  = (float) $tier['price'];
+		foreach ( $tier['extras'] as $e ) {
+			if ( in_array( $e['key'], $extra_keys, true ) ) {
+				$extras[] = $e;
+				$total   += (float) $e['price'];
+			}
+		}
+		return array(
+			'total'  => round( $total, 2 ),
+			'tier'   => $tier,
+			'extras' => $extras,
 		);
 	}
 
@@ -188,7 +257,17 @@ class Package {
 				'rows'        => 4,
 			)
 		);
-		echo '</div><div class="options_group pb-windows">';
+		woocommerce_wp_text_input(
+			array(
+				'id'          => '_pb_label',
+				'label'       => __( 'Etichetta nella griglia', 'photo-booking' ),
+				'description' => __( 'Piccola scritta sopra il nome nella pagina Prenota (es. Servizio, Sessioni di Natale). Vuoto = Servizio.', 'photo-booking' ),
+				'desc_tip'    => true,
+			)
+		);
+		echo '</div>';
+		self::tiers_panel( $product ? self::tiers( $product ) : array() );
+		echo '<div class="options_group pb-windows">';
 		echo '<p class="form-field"><label>' . esc_html__( 'Date dedicate', 'photo-booking' ) . '</label><span class="description">' . esc_html__( 'Se compilate, il pacchetto è prenotabile SOLO in queste date e fasce (es. Natale). Se vuote valgono gli orari generali dello studio. Fasce nel formato 09:30-13:00, 14:30-18:00.', 'photo-booking' ) . '</span></p>';
 		echo '<table class="widefat pb-windows-table" style="margin:0 12px 12px;width:calc(100% - 24px)"><thead><tr><th>' . esc_html__( 'Data', 'photo-booking' ) . '</th><th>' . esc_html__( 'Fasce orarie', 'photo-booking' ) . '</th><th></th></tr></thead><tbody>';
 		$rows = $windows ? $windows : array();
@@ -203,6 +282,110 @@ class Package {
 		echo '</div>';
 		wp_nonce_field( 'pb_package_save', 'pb_package_nonce' );
 		echo '</div>';
+	}
+
+	/** Sub-packages + extras repeater. */
+	private static function tiers_panel( array $tiers ) {
+		echo '<div class="options_group pb-tiers-group">';
+		echo '<p class="form-field"><label>' . esc_html__( 'Sotto-pacchetti', 'photo-booking' ) . '</label><span class="description">' . esc_html__( 'Il cliente sceglie uno di questi dopo aver scelto il servizio. Ognuno ha il suo prezzo e i suoi extra facoltativi. Se non ne aggiungi nessuno vale il prezzo del prodotto.', 'photo-booking' ) . '</span></p>';
+		echo '<div class="pb-tiers">';
+		foreach ( $tiers as $i => $t ) {
+			self::tier_box( $i, $t );
+		}
+		echo '</div>';
+		echo '<script type="text/template" id="tmpl-pb-tier">';
+		self::tier_box( '__i__', array() );
+		echo '</script><script type="text/template" id="tmpl-pb-extra">';
+		self::extra_row( '__i__', '__j__', array() );
+		echo '</script>';
+		echo '<p style="margin:0 12px 12px"><button type="button" class="button pb-add-tier">' . esc_html__( '+ Aggiungi sotto-pacchetto', 'photo-booking' ) . '</button></p>';
+		echo '</div>';
+	}
+
+	private static function tier_box( $i, array $t ) {
+		$t    = wp_parse_args( $t, array( 'key' => '', 'name' => '', 'price' => '', 'description' => '', 'includes' => '', 'extras' => array() ) );
+		$base = '_pb_tiers[' . $i . ']';
+		?>
+		<div class="pb-tier" data-i="<?php echo esc_attr( $i ); ?>" style="margin:0 12px 12px;padding:12px;border:1px solid #dcdcde;background:#fafafa">
+			<input type="hidden" name="<?php echo esc_attr( $base ); ?>[key]" value="<?php echo esc_attr( $t['key'] ); ?>">
+			<p style="display:flex;gap:8px;margin:0 0 8px">
+				<input type="text" style="flex:2" name="<?php echo esc_attr( $base ); ?>[name]" placeholder="<?php esc_attr_e( 'Nome (es. Standard)', 'photo-booking' ); ?>" value="<?php echo esc_attr( $t['name'] ); ?>">
+				<input type="text" class="wc_input_price" style="flex:1" name="<?php echo esc_attr( $base ); ?>[price]" placeholder="<?php echo esc_attr( __( 'Prezzo', 'photo-booking' ) . ' (' . get_woocommerce_currency_symbol() . ')' ); ?>" value="<?php echo esc_attr( '' === $t['price'] ? '' : wc_format_localized_price( $t['price'] ) ); ?>">
+				<button type="button" class="button-link-delete pb-del-tier" title="<?php esc_attr_e( 'Elimina sotto-pacchetto', 'photo-booking' ); ?>">&times;</button>
+			</p>
+			<p style="margin:0 0 8px"><textarea style="width:100%" rows="2" name="<?php echo esc_attr( $base ); ?>[description]" placeholder="<?php esc_attr_e( 'Descrizione breve', 'photo-booking' ); ?>"><?php echo esc_textarea( $t['description'] ); ?></textarea></p>
+			<p style="margin:0 0 8px"><textarea style="width:100%" rows="3" name="<?php echo esc_attr( $base ); ?>[includes]" placeholder="<?php esc_attr_e( 'Cosa include, una voce per riga', 'photo-booking' ); ?>"><?php echo esc_textarea( $t['includes'] ); ?></textarea></p>
+			<strong><?php esc_html_e( 'Extra', 'photo-booking' ); ?></strong>
+			<div class="pb-extras" data-next="<?php echo esc_attr( count( $t['extras'] ) ); ?>">
+				<?php foreach ( $t['extras'] as $j => $e ) : ?>
+					<?php self::extra_row( $i, $j, $e ); ?>
+				<?php endforeach; ?>
+			</div>
+			<p style="margin:6px 0 0"><button type="button" class="button button-small pb-add-extra"><?php esc_html_e( '+ Aggiungi extra', 'photo-booking' ); ?></button></p>
+		</div>
+		<?php
+	}
+
+	private static function extra_row( $i, $j, array $e ) {
+		$e    = wp_parse_args( $e, array( 'key' => '', 'name' => '', 'price' => '' ) );
+		$base = '_pb_tiers[' . $i . '][extras][' . $j . ']';
+		?>
+		<p class="pb-extra" style="display:flex;gap:8px;margin:6px 0 0">
+			<input type="hidden" name="<?php echo esc_attr( $base ); ?>[key]" value="<?php echo esc_attr( $e['key'] ); ?>">
+			<input type="text" style="flex:2" name="<?php echo esc_attr( $base ); ?>[name]" placeholder="<?php esc_attr_e( 'Extra (es. 5 foto in più)', 'photo-booking' ); ?>" value="<?php echo esc_attr( $e['name'] ); ?>">
+			<input type="text" class="wc_input_price" style="flex:1" name="<?php echo esc_attr( $base ); ?>[price]" placeholder="<?php echo esc_attr( __( 'Prezzo', 'photo-booking' ) . ' (' . get_woocommerce_currency_symbol() . ')' ); ?>" value="<?php echo esc_attr( '' === $e['price'] ? '' : wc_format_localized_price( $e['price'] ) ); ?>">
+			<button type="button" class="button-link-delete pb-del-extra">&times;</button>
+		</p>
+		<?php
+	}
+
+	/** Sanitize the posted sub-packages; keys stay stable so existing bookings keep their reference. */
+	private static function sanitize_tiers( $raw ) {
+		$tiers = array();
+		$used  = array();
+		foreach ( (array) $raw as $t ) {
+			$name = sanitize_text_field( wp_unslash( $t['name'] ?? '' ) );
+			if ( '' === $name ) {
+				continue;
+			}
+			$key = sanitize_key( wp_unslash( $t['key'] ?? '' ) );
+			$key = $key && ! isset( $used[ $key ] ) ? $key : self::unique_key( $name, $used );
+			$used[ $key ] = true;
+			$extras       = array();
+			$used_e       = array();
+			foreach ( (array) ( $t['extras'] ?? array() ) as $e ) {
+				$ename = sanitize_text_field( wp_unslash( $e['name'] ?? '' ) );
+				if ( '' === $ename ) {
+					continue;
+				}
+				$ekey            = sanitize_key( wp_unslash( $e['key'] ?? '' ) );
+				$ekey            = $ekey && ! isset( $used_e[ $ekey ] ) ? $ekey : self::unique_key( $ename, $used_e );
+				$used_e[ $ekey ] = true;
+				$extras[]        = array(
+					'key'   => $ekey,
+					'name'  => $ename,
+					'price' => (float) wc_format_decimal( wp_unslash( $e['price'] ?? 0 ) ),
+				);
+			}
+			$tiers[] = array(
+				'key'         => $key,
+				'name'        => $name,
+				'price'       => (float) wc_format_decimal( wp_unslash( $t['price'] ?? 0 ) ),
+				'description' => sanitize_textarea_field( wp_unslash( $t['description'] ?? '' ) ),
+				'includes'    => sanitize_textarea_field( wp_unslash( $t['includes'] ?? '' ) ),
+				'extras'      => $extras,
+			);
+		}
+		return $tiers;
+	}
+
+	private static function unique_key( $name, array $used ) {
+		$base = sanitize_key( sanitize_title( $name ) ) ?: 'item';
+		$key  = $base;
+		for ( $n = 2; isset( $used[ $key ] ); $n++ ) {
+			$key = $base . '-' . $n;
+		}
+		return $key;
 	}
 
 	private static function window_row( $date, $ranges ) {
@@ -224,6 +407,8 @@ class Package {
 		$product->update_meta_data( '_pb_capacity', isset( $_POST['_pb_capacity'] ) && '' !== $_POST['_pb_capacity'] ? absint( $_POST['_pb_capacity'] ) : '' );
 		$product->update_meta_data( '_pb_includes', sanitize_textarea_field( wp_unslash( $_POST['_pb_includes'] ?? '' ) ) );
 		$product->update_meta_data( '_pb_instructions', wp_kses_post( wp_unslash( $_POST['_pb_instructions'] ?? '' ) ) );
+		$product->update_meta_data( '_pb_label', sanitize_text_field( wp_unslash( $_POST['_pb_label'] ?? '' ) ) );
+		$product->update_meta_data( '_pb_tiers', self::sanitize_tiers( $_POST['_pb_tiers'] ?? array() ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 
 		$dates   = (array) ( $_POST['_pb_windows_date'] ?? array() );
 		$ranges  = (array) ( $_POST['_pb_windows_ranges'] ?? array() );
@@ -269,6 +454,18 @@ class Package {
 				$('.pb-windows-table tbody').append($('#tmpl-pb-window-row').html());
 			});
 			$(document).on('click', '.pb-del-window', function(){ $(this).closest('tr').remove(); });
+			var tierSeq = Date.now();
+			$(document).on('click', '.pb-add-tier', function(){
+				$('.pb-tiers').append($('#tmpl-pb-tier').html().split('__i__').join('n' + (tierSeq++)));
+			});
+			$(document).on('click', '.pb-del-tier', function(){
+				if (confirm('<?php echo esc_js( __( 'Eliminare questo sotto-pacchetto e i suoi extra?', 'photo-booking' ) ); ?>')) { $(this).closest('.pb-tier').remove(); }
+			});
+			$(document).on('click', '.pb-add-extra', function(){
+				var tier = $(this).closest('.pb-tier'), box = tier.find('.pb-extras'), j = 'n' + (tierSeq++);
+				box.append($('#tmpl-pb-extra').html().split('__i__').join(tier.data('i')).split('__j__').join(j));
+			});
+			$(document).on('click', '.pb-del-extra', function(){ $(this).closest('.pb-extra').remove(); });
 		});
 		</script>
 		<?php

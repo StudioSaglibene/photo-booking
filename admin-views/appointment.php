@@ -218,6 +218,7 @@ $finder      = static function ( $target ) use ( $a ) {
 				<a href="tel:<?php echo esc_attr( preg_replace( '/[^\d+]/', '', $a->customer_phone ) ); ?>"><?php echo esc_html( $a->customer_phone ); ?></a>
 				<?php $wa = preg_replace( '/\D/', '', $a->customer_phone ); ?>
 				<?php if ( $wa ) : ?> · <a target="_blank" rel="noopener" href="https://wa.me/<?php echo esc_attr( strlen( $wa ) <= 10 ? '39' . $wa : $wa ); ?>">WhatsApp</a><?php endif; ?></p>
+				<?php if ( $a->extras_label() ) : ?><p><span class="pb-muted"><?php esc_html_e( 'Extra', 'photo-booking' ); ?>:</span> <?php echo esc_html( $a->extras_label() ); ?></p><?php endif; ?>
 				<?php if ( $a->get_meta( 'participants' ) ) : ?><p><span class="pb-muted"><?php esc_html_e( 'Partecipanti', 'photo-booking' ); ?>:</span> <?php echo esc_html( $a->get_meta( 'participants' ) ); ?></p><?php endif; ?>
 				<?php if ( $a->get_meta( 'children' ) ) : ?><p><span class="pb-muted"><?php esc_html_e( 'Età bambini', 'photo-booking' ); ?>:</span> <?php echo esc_html( $a->get_meta( 'children' ) ); ?></p><?php endif; ?>
 				<?php if ( $a->customer_notes ) : ?><p><span class="pb-muted"><?php esc_html_e( 'Note cliente', 'photo-booking' ); ?>:</span><br><?php echo nl2br( esc_html( $a->customer_notes ) ); ?></p><?php endif; ?>

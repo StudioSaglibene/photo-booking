@@ -96,6 +96,7 @@
 			} else if (!self.selectedDate) {
 				self.slotsTitle.textContent = '';
 				self.slotsBox.innerHTML = '';
+				if (self.opts.placeholder) { self.slotsBox.appendChild(el('p', { class: 'pb-cal-msg', text: self.opts.placeholder })); }
 			}
 		}).catch(function () { self.msg.textContent = t.error || 'Error'; });
 	};
@@ -109,14 +110,21 @@
 		var first = new Date(this.year, this.month, 1);
 		var offset = (first.getDay() + 6) % 7;
 		var total = new Date(this.year, this.month + 1, 0).getDate();
-		for (var i = 0; i < offset; i++) { this.grid.appendChild(el('span', { class: 'pb-cal-empty' })); }
+		var prevTotal = new Date(this.year, this.month, 0).getDate();
+		for (var i = 0; i < offset; i++) { this.grid.appendChild(el('span', { class: 'pb-cal-empty', text: this.opts.adjacent ? String(prevTotal - offset + i + 1) : '' })); }
+		var today = new Date();
+		var todayStr = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate());
 		for (var d = 1; d <= total; d++) {
 			var ds = this.year + '-' + pad(this.month + 1) + '-' + pad(d);
 			var available = this.days.indexOf(ds) !== -1;
-			var b = el('button', { type: 'button', class: 'pb-cal-day' + (available ? ' is-available' : '') + (ds === this.selectedDate ? ' is-selected' : ''), 'data-date': ds, text: String(d) });
+			var b = el('button', { type: 'button', class: 'pb-cal-day' + (available ? ' is-available' : '') + (ds === this.selectedDate ? ' is-selected' : '') + (ds === todayStr ? ' is-today' : ''), 'data-date': ds, text: String(d) });
 			if (!available) { b.disabled = true; }
 			b.addEventListener('click', (function (date) { return function () { self.pickDate(date); }; })(ds));
 			this.grid.appendChild(b);
+		}
+		if (this.opts.adjacent) {
+			var cells = offset + total;
+			for (var k = 1; cells % 7 !== 0; k++, cells++) { this.grid.appendChild(el('span', { class: 'pb-cal-empty', text: String(k) })); }
 		}
 	};
 
@@ -131,6 +139,7 @@
 	Picker.prototype.loadSlots = function (date) {
 		var self = this;
 		this.slotsTitle.textContent = formatDay(date);
+		if (this.opts.priceLabel) { this.slotsTitle.appendChild(el('em', { text: this.opts.priceLabel })); }
 		this.slotsBox.innerHTML = '';
 		this.slotsBox.appendChild(el('p', { class: 'pb-cal-msg', text: t.loading || '…' }));
 		var req = this.sreq = api('/slots', { product: this.opts.productId, date: date, exclude: this.opts.exclude });

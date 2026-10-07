@@ -21,15 +21,28 @@ class Bookings {
 	 * @param string $mode deposit|full
 	 * @return Appointment|\WP_Error
 	 */
-	public static function create_hold( $product_id, $start, array $customer, $mode ) {
+	public static function create_hold( $product_id, $start, array $customer, $mode, array $selection = array() ) {
 		if ( ! Package::is_package( $product_id ) ) {
 			return new \WP_Error( 'pb_package', __( 'Pacchetto non valido.', 'photo-booking' ) );
 		}
-		$cfg  = Package::config( $product_id );
-		$mode = ( 'full' === $mode || $cfg['deposit'] >= $cfg['price'] ) ? 'full' : 'deposit';
+		$cfg   = Package::config( $product_id );
+		$quote = Package::quote( $product_id, (string) ( $selection['tier'] ?? '' ), (array) ( $selection['extras'] ?? array() ) );
+		if ( is_wp_error( $quote ) ) {
+			return $quote;
+		}
+		$total   = $quote['total'];
+		$deposit = min( $cfg['deposit'] < $cfg['price'] ? $cfg['deposit'] : $total, $total );
+		$mode    = ( 'full' === $mode || $deposit >= $total ) ? 'full' : 'deposit';
+		$meta    = array( 'product_name' => $cfg['name'] );
+		if ( $quote['tier'] ) {
+			$meta['tier']        = $quote['tier']['key'];
+			$meta['tier_name']   = $quote['tier']['name'];
+			$meta['tier_price']  = $quote['tier']['price'];
+			$meta['extras']      = $quote['extras'];
+		}
 
 		return Lock::with(
-			static function () use ( $product_id, $start, $customer, $mode, $cfg ) {
+			static function () use ( $product_id, $start, $customer, $mode, $total, $deposit, $meta ) {
 				$slot = Availability::find_slot( $product_id, $start );
 				if ( ! $slot ) {
 					return new \WP_Error( 'pb_slot', __( 'L\'orario scelto non è più disponibile. Scegline un altro.', 'photo-booking' ) );
@@ -46,12 +59,12 @@ class Bookings {
 						'busy_until'      => $slot['busy_until'],
 						'status'          => Appointment::PENDING_PAYMENT,
 						'payment_mode'    => $mode,
-						'total'           => $cfg['price'],
-						'deposit'         => $cfg['deposit'],
+						'total'           => $total,
+						'deposit'         => $deposit,
 						'hold_expires_at' => Time::now()->modify( '+' . (int) Settings::get( 'hold_minutes' ) . ' minutes' )->format( Time::DB ),
 						'source'          => 'online',
 						'customer_notes'  => $customer['notes'] ?? '',
-						'meta'            => array_merge( (array) ( $customer['meta'] ?? array() ), array( 'product_name' => $cfg['name'] ) ),
+						'meta'            => array_merge( (array) ( $customer['meta'] ?? array() ), $meta ),
 					)
 				);
 				$appt->log( 'hold', 'Slot riservato in attesa di pagamento' );

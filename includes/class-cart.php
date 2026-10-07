@@ -154,6 +154,18 @@ class Cart {
 		if ( ! $appt ) {
 			return $data;
 		}
+		if ( $appt->get_meta( 'tier_name' ) ) {
+			$data[] = array(
+				'key'   => __( 'Pacchetto', 'photo-booking' ),
+				'value' => $appt->get_meta( 'tier_name' ),
+			);
+		}
+		if ( $appt->extras_label() ) {
+			$data[] = array(
+				'key'   => __( 'Extra', 'photo-booking' ),
+				'value' => $appt->extras_label(),
+			);
+		}
 		$data[] = array(
 			'key'   => __( 'Data', 'photo-booking' ),
 			'value' => ucfirst( Time::format_date( $appt->start_at ) ),
@@ -293,6 +305,12 @@ class Cart {
 		$appt = Appointment::get( $values['pb_appointment_id'] );
 		$item->add_meta_data( '_pb_appointment_id', (int) $values['pb_appointment_id'], true );
 		if ( $appt ) {
+			if ( $appt->get_meta( 'tier_name' ) ) {
+				$item->add_meta_data( __( 'Pacchetto', 'photo-booking' ), $appt->get_meta( 'tier_name' ), true );
+			}
+			if ( $appt->extras_label() ) {
+				$item->add_meta_data( __( 'Extra', 'photo-booking' ), $appt->extras_label(), true );
+			}
 			$item->add_meta_data( __( 'Appuntamento', 'photo-booking' ), Time::format_datetime( $appt->start_at ), true );
 			$item->add_meta_data( __( 'Pagamento', 'photo-booking' ), 'full' === $appt->payment_mode ? __( 'Intero importo', 'photo-booking' ) : __( 'Acconto', 'photo-booking' ), true );
 		}
