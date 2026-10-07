@@ -11,6 +11,32 @@ class Account {
 	const EP_BOOKINGS   = 'prenotazioni';
 	const EP_DELIVERIES = 'consegne';
 
+	/** Logged-out customers on the account page get the plugin's own login screen. */
+	private static function is_login_screen() {
+		return function_exists( 'is_account_page' ) && is_account_page() && ! is_user_logged_in() && ! is_lost_password_page();
+	}
+
+	public static function login_template( $template, $template_name ) {
+		if ( 'myaccount/form-login.php' === $template_name && self::is_login_screen() ) {
+			return PB_DIR . 'templates/myaccount/form-login.php';
+		}
+		return $template;
+	}
+
+	public static function login_assets() {
+		if ( ! self::is_login_screen() ) {
+			return;
+		}
+		wp_enqueue_style( 'pb-login', PB_URL . 'assets/css/login.css', array( 'pb-flow-fonts' ), PB_VERSION );
+		add_filter(
+			'body_class',
+			static function ( $classes ) {
+				$classes[] = 'pb-login-page';
+				return $classes;
+			}
+		);
+	}
+
 	public static function init() {
 		add_filter( 'woocommerce_get_query_vars', array( __CLASS__, 'query_vars' ) );
 		add_filter( 'woocommerce_account_menu_items', array( __CLASS__, 'menu' ) );
@@ -19,6 +45,8 @@ class Account {
 		add_filter( 'woocommerce_endpoint_' . self::EP_BOOKINGS . '_title', array( __CLASS__, 'title_bookings' ) );
 		add_filter( 'woocommerce_endpoint_' . self::EP_DELIVERIES . '_title', array( __CLASS__, 'title_deliveries' ) );
 		add_action( 'template_redirect', array( __CLASS__, 'handle_post' ), 20 );
+		add_filter( 'wc_get_template', array( __CLASS__, 'login_template' ), 10, 2 );
+		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'login_assets' ), 20 );
 		add_action( 'woocommerce_account_dashboard', array( __CLASS__, 'dashboard_summary' ) );
 		add_filter( 'woocommerce_login_redirect', array( __CLASS__, 'login_redirect' ), 10, 2 );
 	}
