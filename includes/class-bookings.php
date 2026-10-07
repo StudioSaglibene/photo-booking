@@ -432,6 +432,10 @@ class Bookings {
 				);
 				if ( 'customer' === $by ) {
 					$changes['reschedule_count'] = $appt->reschedule_count + 1;
+					// A date chosen by the customer must be confirmed again by the studio.
+					if ( Appointment::CONFIRMED === $appt->status ) {
+						$changes['status'] = Appointment::PENDING;
+					}
 				}
 				$appt->update( $changes );
 				return true;
@@ -440,12 +444,12 @@ class Bookings {
 		if ( is_wp_error( $res ) ) {
 			return $res;
 		}
-		$appt->log( 'rescheduled', sprintf( 'Spostata da %s a %s (%s)', Time::format_datetime( $old ), Time::format_datetime( $appt->start_at ), 'customer' === $by ? 'dal cliente' : 'dallo studio' ) );
-		if ( 'customer' === $by || ! empty( $opts['notify'] ) ) {
-			Emails::send( 'rescheduled', $appt, array( 'old' => $old, 'by' => $by, 'message' => $opts['message'] ?? '' ) );
-		}
+		$appt->log( 'rescheduled', sprintf( 'Spostata da %s a %s (%s)', Time::format_datetime( $old ), Time::format_datetime( $appt->start_at ), 'customer' === $by ? 'dal cliente, in attesa di nuova conferma' : 'dallo studio' ) );
 		if ( 'customer' === $by ) {
+			Emails::send( 'rescheduled_pending', $appt, array( 'old' => $old, 'by' => $by ) );
 			Emails::send( 'admin_customer_rescheduled', $appt, array( 'old' => $old ) );
+		} elseif ( ! empty( $opts['notify'] ) ) {
+			Emails::send( 'rescheduled', $appt, array( 'old' => $old, 'by' => $by, 'message' => $opts['message'] ?? '' ) );
 		}
 		return true;
 	}

@@ -83,7 +83,7 @@ if ( 'credit_issued' === $key && ! empty( $extra['code'] ) ) {
 	echo '<p style="font-size:18px;text-align:center;padding:12px;border:1px dashed ' . esc_attr( $accent ) . ';">' . esc_html__( 'Codice credito', 'photo-booking' ) . ': <strong>' . esc_html( $extra['code'] ) . '</strong></p>';
 }
 
-if ( 'rescheduled' === $key && ! empty( $extra['old'] ) ) {
+if ( in_array( $key, array( 'rescheduled', 'rescheduled_pending', 'admin_customer_rescheduled' ), true ) && ! empty( $extra['old'] ) ) {
 	/* translators: %s old date */
 	echo '<p style="color:#777">' . esc_html( sprintf( __( 'Data precedente: %s', 'photo-booking' ), Time::format_datetime( $extra['old'] ) ) ) . '</p>';
 }

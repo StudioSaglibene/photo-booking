@@ -104,7 +104,7 @@ $nonce = static function () use ( $a ) {
 			<?php if ( is_wp_error( $can_move ) ) : ?>
 				<p><?php echo esc_html( $can_move->get_error_message() ); ?></p>
 			<?php else : ?>
-				<p class="pb-muted"><?php esc_html_e( 'Scegli una nuova data e un nuovo orario. Lo spostamento gratuito si può usare una sola volta.', 'photo-booking' ); ?></p>
+				<p class="pb-muted"><?php esc_html_e( 'Scegli una nuova data e un nuovo orario. Lo spostamento gratuito si può usare una sola volta e la nuova data dovrà essere confermata dallo studio.', 'photo-booking' ); ?></p>
 				<form method="post">
 					<?php $nonce(); ?>
 					<input type="hidden" name="pb_account_action" value="reschedule">

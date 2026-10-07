@@ -212,7 +212,7 @@ class Account {
 					wc_add_notice( $res->get_error_message(), 'error' );
 					$back = self::booking_url( $a, array( 'azione' => 'sposta' ) );
 				} else {
-					wc_add_notice( __( 'Fatto! Il tuo appuntamento è stato spostato. Ti abbiamo inviato una email di conferma.', 'photo-booking' ) );
+					wc_add_notice( __( 'Richiesta inviata! Lo studio verificherà la nuova data e te la confermerà via email.', 'photo-booking' ) );
 				}
 				break;
 

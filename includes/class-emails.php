@@ -68,6 +68,14 @@ class Emails {
 				'intro'   => "Ciao {customer_name},\nil tuo appuntamento per {package} è stato spostato a {date} alle {time}.",
 				'button'  => 'account',
 			),
+			'rescheduled_pending' => array(
+				'to'      => 'customer',
+				'title'   => 'Prenotazione – spostata dal cliente (da confermare)',
+				'subject' => 'Richiesta di spostamento ricevuta',
+				'heading' => 'Nuova data in attesa di conferma',
+				'intro'   => "Ciao {customer_name},\nabbiamo ricevuto la tua richiesta di spostare {package} a {date} alle {time}. Lo studio la verificherà e ti confermerà la nuova data al più presto via email.",
+				'button'  => 'account',
+			),
 			'cancelled'          => array(
 				'to'      => 'customer',
 				'title'   => 'Prenotazione – annullata',
@@ -161,8 +169,8 @@ class Emails {
 				'to'      => 'admin',
 				'title'   => 'Admin – il cliente ha spostato',
 				'subject' => '[{site_title}] {customer_name} ha spostato l\'appuntamento {appointment_number}',
-				'heading' => 'Appuntamento spostato dal cliente',
-				'intro'   => '{customer_name} ha spostato {package} al {date} alle {time}.',
+				'heading' => 'Appuntamento spostato dal cliente: da confermare',
+				'intro'   => '{customer_name} ha spostato {package} al {date} alle {time}. La prenotazione è tornata "In attesa di conferma": controlla la nuova data e confermala.',
 				'button'  => 'admin',
 			),
 			'admin_customer_cancelled' => array(
