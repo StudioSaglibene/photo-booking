@@ -1,0 +1,10 @@
+/* Photo Booking – header del tema (Rife): pulsante Prenota e link Accedi, su tutte le pagine. */
+#header .tools_button { font-family: "Nunito Sans", sans-serif !important; font-size: 11px !important; letter-spacing: 1.65px !important; text-transform: uppercase !important; font-weight: 400 !important; padding: 8px 20px !important; line-height: 16.5px !important; color: #f2eee8 !important; background: #2f2f2f !important; border: 0 !important; border-radius: 0 !important; transition: opacity .3s !important; }
+#header .tools_button:hover { opacity: .8; }
+/* Link "Accedi" accanto a Prenota nel header */
+#header-tools .pb-account-link { display: inline-flex; align-items: center; gap: 8px; margin-left: 18px; padding-left: 18px; border-left: 1px solid rgba(255, 255, 255, .25); font-family: "Nunito Sans", sans-serif; font-size: 10px; font-weight: 400; letter-spacing: 2px; text-transform: uppercase; color: rgba(255, 255, 255, .7); text-decoration: none; line-height: 32px; transition: color .3s; }
+#header-tools .pb-account-link:hover { color: #fff; }
+#header-tools .pb-account-icon { display: inline-block; font-size: 13px; line-height: 1; }
+body.pb-booking-page #header:not(.sticky-values) #header-tools .pb-account-link, #header.sticky-values #header-tools .pb-account-link { color: #7b6d64; border-left-color: rgba(47, 47, 47, .2); }
+body.pb-booking-page #header:not(.sticky-values) #header-tools .pb-account-link:hover, #header.sticky-values #header-tools .pb-account-link:hover { color: #232b2b; }
+@media (max-width: 767px) { #header-tools .pb-account-link { margin-left: 10px; padding-left: 10px; font-size: 0; } #header-tools .pb-account-link .pb-account-icon { font-size: 18px; } }

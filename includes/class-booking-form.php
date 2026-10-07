@@ -15,6 +15,17 @@ class Booking_Form {
 		add_shortcode( 'prenotazione', array( __CLASS__, 'shortcode' ) );
 		add_action( 'wp_loaded', array( __CLASS__, 'handle_post' ), 30 );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'register_assets' ) );
+		add_filter( 'apollo13framework_header_tools', array( __CLASS__, 'header_account_link' ) );
+	}
+
+	/** "Accedi" / "Area riservata" link next to the Prenota button in the theme header (Rife). */
+	public static function header_account_link( $html ) {
+		if ( ! function_exists( 'wc_get_page_permalink' ) ) {
+			return $html;
+		}
+		$url   = wc_get_page_permalink( 'myaccount' );
+		$label = is_user_logged_in() ? __( 'Area riservata', 'photo-booking' ) : __( 'Accedi', 'photo-booking' );
+		return $html . '<a class="pb-account-link" href="' . esc_url( $url ) . '"><i class="pb-account-icon fa fa-user-o" aria-hidden="true"></i>' . esc_html( $label ) . '</a>';
 	}
 
 	public static function register_assets() {
@@ -25,6 +36,7 @@ class Booking_Form {
 		wp_register_style( 'pb-flow-fonts', 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Libre+Franklin:wght@300;400&family=Nunito+Sans:wght@300;400;500&display=swap', array(), null ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
 		wp_register_style( 'pb-flow', PB_URL . 'assets/css/booking-flow.css', array( 'pb-flow-fonts' ), PB_VERSION );
 		wp_register_script( 'pb-flow', PB_URL . 'assets/js/booking-flow.js', array( 'pb-picker' ), PB_VERSION, true );
+		wp_enqueue_style( 'pb-header', PB_URL . 'assets/css/header.css', array(), PB_VERSION );
 		wp_localize_script( 'pb-picker', 'PB', self::js_config() );
 		if ( function_exists( 'is_account_page' ) && is_account_page() ) {
 			wp_enqueue_style( 'pb-front' );

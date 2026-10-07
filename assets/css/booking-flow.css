@@ -183,5 +183,4 @@ body.pb-booking-page #header:not(.sticky-values) a.logo.sticky-logo img { width:
 body.pb-booking-page #header .top-menu > li > a, body.pb-booking-page #header .top-menu > li > a span, body.pb-booking-page #header #header-tools .tool, body.pb-booking-page #header .socials a, body.pb-booking-page #header .top-menu .sub-menu-opener { color: #232b2b !important; }
 body.pb-booking-page #header .top-menu > li > a:hover span { color: #7b6d64 !important; }
 body.pb-booking-page #header .top-menu > li > a span { font-family: "Nunito Sans", sans-serif; font-size: 11px; letter-spacing: 1.65px; text-transform: uppercase; font-weight: 400; }
-#header .tools_button { font-family: "Nunito Sans", sans-serif !important; font-size: 11px !important; letter-spacing: 1.65px !important; text-transform: uppercase !important; font-weight: 400 !important; padding: 8px 20px !important; line-height: 16.5px !important; color: #f2eee8 !important; background: #2f2f2f !important; border: 0 !important; border-radius: 0 !important; transition: opacity .3s !important; }
-#header .tools_button:hover { opacity: .8; }
+
