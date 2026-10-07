@@ -236,7 +236,13 @@
 			var s = e.target.closest('.pb-service');
 			if (s) { chooseService(s); return; }
 			var t = e.target.closest('.pb-tier');
-			if (t) { selectTier(t); return; }
+			if (t) {
+				selectTier(t);
+				// Scroll down to the extras of this sub-package, or to "Continua" when it has none.
+				var target = $(form, '.pb-extras:not([hidden])') || $(form, '[data-step="2"] .pb-continue');
+				setTimeout(function () { target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 120);
+				return;
+			}
 			var nx = e.target.closest('[data-next]');
 			if (nx && !nx.disabled) { go(+nx.getAttribute('data-next')); return; }
 			var bk = e.target.closest('[data-go]');
