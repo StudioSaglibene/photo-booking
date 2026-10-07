@@ -50,3 +50,6 @@ body.pb-login-page .u-columns, body.pb-login-page .col2-set { display: block; }
 }
 .pb-login .pb-login-form, .pb-login-page .woocommerce form.login { border: 0 !important; padding: 0 !important; margin: 0 !important; box-shadow: none !important; background: transparent !important; border-radius: 0 !important; }
 .pb-login-notices .woocommerce-error { border-color: #e4b3ad; background: #fbeeec; color: #8c2f1f; }
+.pb-login-page .pb-login-notices .woocommerce-error, .pb-login-page .pb-login-notices .woocommerce-message, .pb-login-page .pb-login-notices .woocommerce-info { background: #fbeeec !important; border: 1px solid #e4b3ad !important; color: #8c2f1f !important; border-radius: 8px !important; padding: 12px 14px !important; margin: 0 0 20px !important; font-size: 13px !important; font-weight: 400 !important; line-height: 1.6 !important; box-shadow: none !important; }
+.pb-login-page .pb-login-notices .woocommerce-message, .pb-login-page .pb-login-notices .woocommerce-info { background: #fdf8ee !important; border-color: #e7d7c2 !important; color: #6b4a2a !important; }
+.pb-login-page .pb-login-notices .woocommerce-error::before, .pb-login-page .pb-login-notices .woocommerce-message::before, .pb-login-page .pb-login-notices .woocommerce-info::before { display: none !important; }
