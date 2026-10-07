@@ -14,6 +14,7 @@ class Cart {
 		add_action( 'woocommerce_before_calculate_totals', array( __CLASS__, 'set_prices' ), 20 );
 		add_filter( 'woocommerce_get_item_data', array( __CLASS__, 'item_data' ), 10, 2 );
 		add_action( 'woocommerce_check_cart_items', array( __CLASS__, 'check_holds' ) );
+		add_action( 'woocommerce_cart_loaded_from_session', array( __CLASS__, 'keep_latest_booking' ), 20 );
 		add_action( 'woocommerce_remove_cart_item', array( __CLASS__, 'release_on_remove' ), 10, 2 );
 		add_filter( 'woocommerce_cart_item_quantity', array( __CLASS__, 'fixed_quantity' ), 10, 3 );
 		add_filter( 'woocommerce_cart_item_permalink', array( __CLASS__, 'item_permalink' ), 10, 2 );
@@ -94,6 +95,27 @@ class Cart {
 		);
 		self::apply_credits();
 		return $key;
+	}
+
+	/**
+	 * One booking per checkout: when a login merges an old persistent cart with the current one,
+	 * keep only the most recent hold and release the others.
+	 */
+	public static function keep_latest_booking( $cart ) {
+		$bookings = array();
+		foreach ( $cart->get_cart() as $key => $item ) {
+			if ( ! empty( $item['pb_appointment_id'] ) ) {
+				$bookings[ $key ] = (int) $item['pb_appointment_id'];
+			}
+		}
+		if ( count( $bookings ) < 2 ) {
+			return;
+		}
+		arsort( $bookings );
+		array_shift( $bookings );
+		foreach ( array_keys( $bookings ) as $key ) {
+			$cart->remove_cart_item( $key );
+		}
 	}
 
 	public static function cart_has_booking() {

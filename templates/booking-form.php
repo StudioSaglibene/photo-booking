@@ -164,8 +164,8 @@ $fmt         = static function ( $v ) {
 					<h2 class="pb-title"><?php esc_html_e( 'Conferma i tuoi dati.', 'photo-booking' ); ?></h2>
 					<p class="pb-lead"><?php esc_html_e( 'La prenotazione verrà aggiunta alla tua area personale, dove trovi acconto, saldo e la tua galleria.', 'photo-booking' ); ?></p>
 				<?php else : ?>
-					<h2 class="pb-title"><?php esc_html_e( 'Crea il tuo profilo.', 'photo-booking' ); ?></h2>
-					<p class="pb-lead"><?php echo wp_kses_post( __( 'Il tuo spazio personale dove seguire ogni passo insieme: acconto, saldo, e infine la tua <em>galleria</em>.', 'photo-booking' ) ); ?></p>
+					<h2 class="pb-title"><?php esc_html_e( 'I tuoi dati.', 'photo-booking' ); ?></h2>
+					<p class="pb-lead"><?php echo wp_kses_post( __( 'Al pagamento potrai accedere o creare il tuo profilo con una password: lo spazio personale dove seguire acconto, saldo e la tua <em>galleria</em>.', 'photo-booking' ) ); ?></p>
 					<p class="pb-loginbox"><?php esc_html_e( 'Hai già un account?', 'photo-booking' ); ?> <a href="<?php echo esc_url( $login_url ); ?>" class="pb-login-link"><?php esc_html_e( 'Accedi qui', 'photo-booking' ); ?></a></p>
 				<?php endif; ?>
 
@@ -174,9 +174,6 @@ $fmt         = static function ( $v ) {
 					<p class="pb-f"><label for="pb-last"><?php esc_html_e( 'Cognome', 'photo-booking' ); ?></label><input id="pb-last" type="text" name="last_name" autocomplete="family-name" placeholder="Rossi" required value="<?php echo esc_attr( $values['last_name'] ); ?>"></p>
 					<p class="pb-f"><label for="pb-phone"><?php esc_html_e( 'Telefono', 'photo-booking' ); ?></label><input id="pb-phone" type="tel" name="phone" autocomplete="tel" placeholder="+39 320 000 0000" required value="<?php echo esc_attr( $values['phone'] ); ?>"></p>
 					<p class="pb-f"><label for="pb-email"><?php esc_html_e( 'Email', 'photo-booking' ); ?></label><input id="pb-email" type="email" name="email" autocomplete="email" placeholder="maria@email.com" required value="<?php echo esc_attr( $values['email'] ); ?>" <?php echo $logged_in ? 'readonly' : ''; ?>></p>
-					<?php if ( ! $logged_in ) : ?>
-						<p class="pb-f pb-f-full"><label for="pb-pass"><?php esc_html_e( 'Scegli una password', 'photo-booking' ); ?></label><input id="pb-pass" type="password" name="password" autocomplete="new-password" placeholder="••••••••" minlength="8" required></p>
-					<?php endif; ?>
 				</div>
 
 				<div class="pb-pay">
@@ -206,8 +203,8 @@ $fmt         = static function ( $v ) {
 					<label class="pb-check"><input type="checkbox" name="accept_policy" value="1" required><span class="pb-box" aria-hidden="true"></span><span><?php esc_html_e( 'Ho letto e accetto le condizioni di prenotazione e disdetta.', 'photo-booking' ); ?></span></label>
 				</div>
 
-				<button type="submit" class="pb-btn pb-submit" disabled><?php esc_html_e( 'Prenota', 'photo-booking' ); ?> <span aria-hidden="true">→</span></button>
-				<p class="pb-small"><?php esc_html_e( 'Dopo il pagamento la richiesta arriva allo studio, che la confermerà al più presto via email. Da quel momento gestisci tutto dalla tua area personale.', 'photo-booking' ); ?></p>
+				<button type="submit" class="pb-btn pb-submit" disabled><?php esc_html_e( 'Vai al pagamento', 'photo-booking' ); ?> <span aria-hidden="true">→</span></button>
+				<p class="pb-small"><?php esc_html_e( 'Nel passaggio successivo accedi o crei il tuo profilo e paghi con carta. Dopo il pagamento la richiesta arriva allo studio, che la confermerà al più presto via email.', 'photo-booking' ); ?></p>
 			</div>
 		</div>
 	</section>

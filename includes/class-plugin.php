@@ -24,6 +24,7 @@ class Plugin {
 		Package::init();
 		Booking_Form::init();
 		Cart::init();
+		Checkout::init();
 		Account::init();
 		Emails::init();
 		Rest::init();

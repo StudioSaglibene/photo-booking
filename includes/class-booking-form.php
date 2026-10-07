@@ -158,33 +158,6 @@ class Booking_Form {
 		);
 	}
 
-	/**
-	 * Create the customer's account (the "Crea il tuo profilo" step) and log them in.
-	 *
-	 * @return int|\WP_Error
-	 */
-	private static function create_customer( array $v, $password ) {
-		$user_id = wc_create_new_customer(
-			$v['email'],
-			'',
-			$password,
-			array(
-				'first_name' => $v['first_name'],
-				'last_name'  => $v['last_name'],
-			)
-		);
-		if ( is_wp_error( $user_id ) ) {
-			return $user_id;
-		}
-		update_user_meta( $user_id, 'billing_first_name', $v['first_name'] );
-		update_user_meta( $user_id, 'billing_last_name', $v['last_name'] );
-		update_user_meta( $user_id, 'billing_email', $v['email'] );
-		update_user_meta( $user_id, 'billing_phone', $v['phone'] );
-		wp_set_current_user( $user_id );
-		wc_set_customer_auth_cookie( $user_id );
-		return $user_id;
-	}
-
 	private static function product_by_slug( $slug ) {
 		$post = get_page_by_path( sanitize_title( $slug ), OBJECT, 'product' );
 		return $post ? wc_get_product( $post->ID ) : null;
@@ -238,18 +211,6 @@ class Booking_Form {
 				self::$errors[] = $quote->get_error_message();
 			}
 		}
-		$password = (string) wp_unslash( $_POST['password'] ?? '' ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-		if ( ! is_user_logged_in() ) {
-			if ( is_email( $v['email'] ) && email_exists( $v['email'] ) ) {
-				self::$errors[] = sprintf(
-					/* translators: %s login url */
-					__( 'Esiste già un account con questa email. <a href="%s">Accedi</a> per completare la prenotazione.', 'photo-booking' ),
-					esc_url( wp_login_url( Settings::booking_page_url() . '#prenota-flow' ) )
-				);
-			} elseif ( strlen( $password ) < 8 ) {
-				self::$errors[] = __( 'Scegli una password di almeno 8 caratteri.', 'photo-booking' );
-			}
-		}
 		if ( empty( $_POST['accept_policy'] ) ) {
 			self::$errors[] = __( 'Devi accettare le condizioni di prenotazione e disdetta.', 'photo-booking' );
 		}
@@ -265,13 +226,7 @@ class Booking_Form {
 		}
 		set_transient( 'pb_hold_' . $ip, $cnt + 1, 10 * MINUTE_IN_SECONDS );
 
-		if ( ! is_user_logged_in() ) {
-			$user_id = self::create_customer( $v, $password );
-			if ( is_wp_error( $user_id ) ) {
-				self::$errors[] = $user_id->get_error_message();
-				return;
-			}
-		} else {
+		if ( is_user_logged_in() ) {
 			update_user_meta( get_current_user_id(), 'billing_phone', $v['phone'] );
 		}
 

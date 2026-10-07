@@ -87,8 +87,12 @@ class Account {
 	}
 
 	public static function login_redirect( $redirect, $user ) {
-		if ( ! empty( $_REQUEST['redirect_to'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+		if ( ! empty( $_REQUEST['redirect_to'] ) || ! empty( $_REQUEST['redirect'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 			return $redirect;
+		}
+		// Login from the checkout: stay there, the booking is in the cart.
+		if ( Cart::cart_has_booking() ) {
+			return wc_get_checkout_url();
 		}
 		if ( $user && ! user_can( $user, Install::CAP ) && Appointment::query( array( 'customer_id' => $user->ID, 'limit' => 1 ) ) ) {
 			return wc_get_account_endpoint_url( self::EP_BOOKINGS );
