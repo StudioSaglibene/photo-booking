@@ -50,7 +50,7 @@ class Settings {
 			'r2_prefix'               => 'consegne/',
 			'delivery_days'           => 30,
 			'delivery_warn_days'      => 3,
-			'delivery_purge_days'     => 30,
+			'delivery_purge_days'     => 0,
 			'download_link_minutes'   => 10,
 			// Appearance.
 			'accent_color'            => '#8a6d4b',
