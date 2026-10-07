@@ -133,7 +133,7 @@ class Install {
   object_key varchar(255) NOT NULL DEFAULT '',
   filename varchar(190) NOT NULL DEFAULT '',
   size bigint(20) unsigned NOT NULL DEFAULT 0,
-  upload_id varchar(255) NOT NULL DEFAULT '',
+  upload_id text NULL,
   status varchar(20) NOT NULL DEFAULT 'uploading',
   uploaded_at datetime NULL DEFAULT NULL,
   expires_at datetime NULL DEFAULT NULL,
