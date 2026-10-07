@@ -130,3 +130,5 @@ body.pb-checkout-page form.woocommerce-form-login.login .lost_password { margin-
 body.pb-checkout-page form.checkout .woocommerce-billing-fields > h3 { margin-bottom: 28px; }
 body.pb-checkout-page form.checkout .woocommerce-account-fields { margin-top: 8px; }
 body.pb-checkout-page form.checkout #order_review_heading { margin-bottom: 28px; align-self: end; }
+/* Niente pulsanti express (Apple Pay / Google Pay / Link) sopra il modulo */
+body.pb-checkout-page #wc-stripe-express-checkout-element, body.pb-checkout-page .wc-stripe-express-checkout-element, body.pb-checkout-page #wc-stripe-express-checkout__wrapper, body.pb-checkout-page #wc-stripe-payment-request-wrapper, body.pb-checkout-page #wc-stripe-payment-request-button-separator, body.pb-checkout-page #wc-stripe-express-checkout-button-separator { display: none !important; }

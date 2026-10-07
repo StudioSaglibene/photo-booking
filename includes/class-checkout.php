@@ -19,6 +19,32 @@ class Checkout {
 		add_filter( 'woocommerce_order_button_text', array( __CLASS__, 'button_text' ) );
 		add_filter( 'gettext', array( __CLASS__, 'texts' ), 10, 3 );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'assets' ), 20 );
+		// Login box and "choose a password" at the checkout, whatever the WooCommerce settings say.
+		add_filter( 'pre_option_woocommerce_enable_checkout_login_reminder', array( __CLASS__, 'yes' ) );
+		add_filter( 'pre_option_woocommerce_enable_signup_and_login_from_checkout', array( __CLASS__, 'yes' ) );
+		add_filter( 'pre_option_woocommerce_registration_generate_password', array( __CLASS__, 'no' ) );
+		add_filter( 'woocommerce_available_payment_gateways', array( __CLASS__, 'card_only' ), 50 );
+	}
+
+	public static function yes() {
+		return 'yes';
+	}
+
+	public static function no() {
+		return 'no';
+	}
+
+	/** Bookings are paid by card: hide the extra Stripe methods (Klarna, Link, wallets…) even if enabled on the Stripe side. */
+	public static function card_only( $gateways ) {
+		if ( is_admin() || ! Cart::cart_has_booking() ) {
+			return $gateways;
+		}
+		foreach ( array_keys( $gateways ) as $id ) {
+			if ( 0 === strpos( $id, 'stripe_' ) ) {
+				unset( $gateways[ $id ] );
+			}
+		}
+		return $gateways;
 	}
 
 	private static function is_checkout_form() {
