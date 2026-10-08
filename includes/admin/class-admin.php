@@ -541,6 +541,11 @@ class Admin {
 		$values = array(
 			'booking_page_id'        => absint( $p['booking_page_id'] ?? 0 ),
 			'studio_address'         => sanitize_text_field( $p['studio_address'] ?? '' ),
+			'business_name'          => sanitize_text_field( $p['business_name'] ?? '' ),
+			'business_vat'           => sanitize_text_field( $p['business_vat'] ?? '' ),
+			'business_address'       => sanitize_text_field( $p['business_address'] ?? '' ),
+			'business_email'         => sanitize_email( $p['business_email'] ?? '' ),
+			'business_phone'         => sanitize_text_field( $p['business_phone'] ?? '' ),
 			'accent_color'           => sanitize_hex_color( $p['accent_color'] ?? '' ) ?: '#8a6d4b',
 			'hours'                  => $hours,
 			'slot_interval'          => $int( 'slot_interval' ),

@@ -52,6 +52,12 @@ class Settings {
 			'delivery_warn_days'      => 3,
 			'delivery_purge_days'     => 0,
 			'download_link_minutes'   => 10,
+			// Seller identity (checkout, legal pages).
+			'business_name'           => '',
+			'business_address'        => '',
+			'business_vat'            => '',
+			'business_email'          => '',
+			'business_phone'          => '',
 			// Appearance.
 			'accent_color'            => '#8a6d4b',
 			'fullcalendar_src'        => 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js',

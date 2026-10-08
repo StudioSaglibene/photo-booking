@@ -38,6 +38,14 @@ $cors = wp_json_encode(
 				</select>
 				<p class="description"><?php echo wp_kses_post( __( 'La pagina deve contenere lo shortcode <code>[prenotazione]</code>. Varianti: <code>[prenotazione categoria="natale"]</code> (solo i pacchetti di una categoria prodotto), <code>[prenotazione pacchetto="123"]</code> (un pacchetto specifico, es. sulla landing di Natale).', 'photo-booking' ) ); ?></p>
 			</td></tr>
+			<tr><th><?php esc_html_e( 'Dati del venditore', 'photo-booking' ); ?></th><td>
+				<input type="text" class="regular-text" name="business_name" placeholder="<?php esc_attr_e( 'Ragione sociale / nome e cognome', 'photo-booking' ); ?>" value="<?php echo esc_attr( $s['business_name'] ); ?>">
+				<input type="text" class="regular-text" name="business_vat" placeholder="<?php esc_attr_e( 'Partita IVA', 'photo-booking' ); ?>" value="<?php echo esc_attr( $s['business_vat'] ); ?>"><br>
+				<input type="text" class="large-text" name="business_address" placeholder="<?php esc_attr_e( 'Sede (via, CAP, città)', 'photo-booking' ); ?>" value="<?php echo esc_attr( $s['business_address'] ); ?>" style="margin-top:6px"><br>
+				<input type="email" class="regular-text" name="business_email" placeholder="<?php esc_attr_e( 'Email di contatto', 'photo-booking' ); ?>" value="<?php echo esc_attr( $s['business_email'] ); ?>" style="margin-top:6px">
+				<input type="text" class="regular-text" name="business_phone" placeholder="<?php esc_attr_e( 'Telefono', 'photo-booking' ); ?>" value="<?php echo esc_attr( $s['business_phone'] ); ?>" style="margin-top:6px">
+				<p class="description"><?php esc_html_e( 'Compaiono nel checkout, nelle pagine legali (shortcode [pb_venditore]) e nelle email: obbligatori per la vendita a distanza.', 'photo-booking' ); ?></p>
+			</td></tr>
 			<tr><th><?php esc_html_e( 'Indirizzo dello studio', 'photo-booking' ); ?></th><td><input type="text" class="large-text" name="studio_address" value="<?php echo esc_attr( $s['studio_address'] ); ?>"><p class="description"><?php esc_html_e( 'Mostrato nelle email e nell\'area privata.', 'photo-booking' ); ?></p></td></tr>
 			<tr><th><?php esc_html_e( 'Colore principale', 'photo-booking' ); ?></th><td><input type="color" name="accent_color" value="<?php echo esc_attr( $s['accent_color'] ); ?>"></td></tr>
 		</table>

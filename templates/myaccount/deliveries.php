@@ -47,7 +47,7 @@ defined( 'ABSPATH' ) || exit;
 					</div>
 					<div class="pb-delivery-action">
 						<?php if ( $active ) : ?>
-							<a class="button alt" href="<?php echo esc_url( Deliveries::download_link( $d ) ); ?>"><?php esc_html_e( 'Scarica ZIP', 'photo-booking' ); ?></a>
+							<a class="button alt pb-download" href="<?php echo esc_url( Deliveries::download_link( $d ) ); ?>" data-wait="<?php esc_attr_e( 'Attendi 30 secondi…', 'photo-booking' ); ?>"><?php esc_html_e( 'Scarica ZIP', 'photo-booking' ); ?></a>
 						<?php endif; ?>
 					</div>
 				</div>
@@ -56,3 +56,24 @@ defined( 'ABSPATH' ) || exit;
 		<p class="pb-muted"><?php esc_html_e( 'Consiglio: dopo il download salva una copia delle foto su un altro dispositivo o servizio cloud.', 'photo-booking' ); ?></p>
 	<?php endif; ?>
 </div>
+
+<script id="pb-download-guard">
+/* Un download ogni 30 secondi: dopo il clic il pulsante resta disattivato (il server applica lo stesso limite). */
+(function () {
+	document.querySelectorAll('a.pb-download').forEach(function (a) {
+		a.addEventListener('click', function (e) {
+			if (a.classList.contains('is-waiting')) { e.preventDefault(); return; }
+			var label = a.textContent, left = 30;
+			a.classList.add('is-waiting');
+			a.setAttribute('aria-disabled', 'true');
+			var tick = setInterval(function () {
+				left--;
+				a.textContent = a.getAttribute('data-wait').replace('30', String(left));
+				if (left <= 0) { clearInterval(tick); a.classList.remove('is-waiting'); a.removeAttribute('aria-disabled'); a.textContent = label; }
+			}, 1000);
+			a.textContent = a.getAttribute('data-wait');
+		});
+	});
+	if (location.search.indexOf('pb_wait=1') !== -1 && window.pbToast) { window.pbToast('<?php echo esc_js( __( 'Hai appena scaricato questo file: attendi 30 secondi prima di un nuovo download.', 'photo-booking' ) ); ?>', 'info'); }
+})();
+</script>

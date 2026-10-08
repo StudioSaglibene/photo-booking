@@ -24,6 +24,18 @@ class Account {
 	}
 
 	public static function login_assets() {
+		if ( function_exists( 'is_account_page' ) && is_account_page() && is_user_logged_in() ) {
+			wp_enqueue_style( 'pb-flow-fonts' );
+			wp_enqueue_style( 'pb-front' );
+			wp_enqueue_style( 'pb-account', PB_URL . 'assets/css/account.css', array( 'pb-front' ), PB_VERSION );
+			add_filter(
+				'body_class',
+				static function ( $classes ) {
+					$classes[] = 'pb-account-page';
+					return $classes;
+				}
+			);
+		}
 		if ( ! self::is_login_screen() ) {
 			return;
 		}

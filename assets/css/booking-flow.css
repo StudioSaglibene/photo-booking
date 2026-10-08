@@ -1,17 +1,17 @@
 /* Photo Booking – flusso "Prenota" (servizio → pacchetto → data → profilo). */
 .pb-flow {
-	--pb-cream: #fefefb;
+	--pb-cream: #fffefb;
 	--pb-sand: #f2eee8;
-	--pb-dark: #232b2b;
-	--pb-ink: #2f2f2f;
+	--pb-dark: #141414;
+	--pb-ink: #141414;
 	--pb-muted: #7b6d64;
 	--pb-rose: #dccdc4;
 	--pb-gold: #c9a96e;
 	--pb-tan: #c4a07a;
 	--pb-line: rgba(47, 47, 47, .14);
-	--pb-serif: "Cormorant Garamond", Georgia, serif;
-	--pb-sans: "Nunito Sans", Helvetica, Arial, sans-serif;
-	--pb-text: "Libre Franklin", Helvetica, Arial, sans-serif;
+	--pb-serif: "Italiana", Georgia, serif;
+	--pb-sans: "Adelle sans", Helvetica, Arial, sans-serif;
+	--pb-text: "Adelle sans", Helvetica, Arial, sans-serif;
 	position: relative;
 	margin: 0;
 	color: var(--pb-ink);
@@ -182,5 +182,47 @@ body.pb-booking-page #header:not(.sticky-values) a.logo.sticky-logo { display: i
 body.pb-booking-page #header:not(.sticky-values) a.logo.sticky-logo img { width: auto !important; height: auto !important; max-width: 230px !important; opacity: 1 !important; }
 body.pb-booking-page #header .top-menu > li > a, body.pb-booking-page #header .top-menu > li > a span, body.pb-booking-page #header #header-tools .tool, body.pb-booking-page #header .socials a, body.pb-booking-page #header .top-menu .sub-menu-opener { color: #232b2b !important; }
 body.pb-booking-page #header .top-menu > li > a:hover span { color: #7b6d64 !important; }
-body.pb-booking-page #header .top-menu > li > a span { font-family: "Nunito Sans", sans-serif; font-size: 11px; letter-spacing: 1.65px; text-transform: uppercase; font-weight: 400; }
+body.pb-booking-page #header .top-menu > li > a span { font-family: "Adelle sans", Helvetica, Arial, sans-serif; font-size: 11px; letter-spacing: 1.65px; text-transform: uppercase; font-weight: 400; }
 
+
+/* ===== Allineamento al sito: pulsanti con bordo nero, testo nero, hover pieno ===== */
+.pb-flow .pb-btn, .pb-flow .pb-submit { height: auto; padding: 12px 24px; border: 1px solid #141414; background: transparent; color: #141414; font-family: "Adelle sans", Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 500; letter-spacing: 0; text-transform: none; line-height: 1; gap: 10px; transition: background-color .3s, color .3s, border-color .3s; }
+.pb-flow .pb-btn:hover, .pb-flow .pb-submit:hover { background: #141414; color: #fffefb; opacity: 1; }
+.pb-flow .pb-btn:disabled, .pb-flow .pb-submit:disabled { background: transparent; border-color: rgba(20, 20, 20, .25); color: rgba(20, 20, 20, .35); cursor: default; }
+.pb-flow .pb-btn span[aria-hidden] { font-size: 15px; }
+.pb-flow .pb-backlink { font-family: "Adelle sans", Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 500; letter-spacing: .5px; }
+.pb-recap { align-items: center; }
+.pb-recap .pb-backlink { display: inline-flex; align-items: center; height: auto; padding: 10px 18px; border: 1px solid #141414; margin: 0; color: #141414; text-transform: none; letter-spacing: 0; font-size: 13px; transition: background-color .3s, color .3s; }
+.pb-recap .pb-backlink:hover { background: #141414; color: #fffefb; opacity: 1; }
+.pb-recap .pb-backlink::before { content: "←"; margin-right: 8px; }
+.pb-recap-line { font-size: 20px; color: #141414; }
+.pb-flow .pb-title { font-size: 40px; }
+.pb-flow .pb-subtitle { font-size: 28px; }
+.pb-service-name { font-size: 26px; line-height: 1.1; margin-bottom: 8px; }
+.pb-service-label, .pb-service-price { font-size: 10px; }
+.pb-tier-name { font-size: 36px; }
+.pb-eyebrow { font-weight: 600; color: #141414; opacity: .55; }
+.pb-eyebrow-light { color: #fffefb; opacity: .6; }
+.pb-lead, .pb-tier-desc, .pb-extra-name, .pb-tier-includes span, .pb-mode strong, .pb-check { font-size: 15px; font-weight: 300; letter-spacing: 0; }
+.pb-flow .pb-f input { font-size: 15px; letter-spacing: 0; }
+.pb-f label { font-weight: 600; letter-spacing: 2px; }
+.pb-flow .pb-slot { font-size: 15px; }
+.pb-flow .pb-cal-day, .pb-flow .pb-cal-empty, .pb-flow .pb-cal-title, .pb-flow .pb-cal-dow { font-size: 14px; }
+@media (max-width: 767px) {
+	.pb-flow .pb-title { font-size: 32px; margin-bottom: 36px; }
+	.pb-flow .pb-subtitle { font-size: 24px; }
+	.pb-lead { font-size: 15px; line-height: 1.8; }
+	.pb-service-name { font-size: 20px; }
+	.pb-tier-name { font-size: 30px; }
+	.pb-recap { flex-direction: column; align-items: flex-start; gap: 14px; }
+	.pb-recap-line { font-size: 17px; line-height: 1.5; }
+	.pb-recap-line i { padding: 0 6px; }
+	.pb-continue { gap: 14px; }
+	.pb-flow .pb-btn, .pb-flow .pb-submit { width: 100%; justify-content: center; }
+	.pb-flow .pb-backlink { margin-bottom: 28px; }
+	.pb-flow .pb-picker-inner { gap: 32px; }
+	.pb-flow .pb-slots { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.pb-fields { gap: 28px 0; }
+	.pb-mode { padding: 14px; }
+	.pb-mode em { display: block; margin: 4px 0 0; }
+}

@@ -1,7 +1,7 @@
 /* Photo Booking – checkout WooCommerce con la grafica della pagina Prenota. */
 body.pb-checkout-page {
-	--pb-cream: #fefefb; --pb-sand: #f2eee8; --pb-dark: #232b2b; --pb-ink: #2f2f2f; --pb-muted: #7b6d64; --pb-rose: #dccdc4; --pb-gold: #c9a96e; --pb-tan: #c4a07a; --pb-line: rgba(47, 47, 47, .14);
-	--pb-serif: "Cormorant Garamond", Georgia, serif; --pb-sans: "Nunito Sans", Helvetica, Arial, sans-serif; --pb-text: "Libre Franklin", Helvetica, Arial, sans-serif;
+	--pb-cream: #fffefb; --pb-sand: #f2eee8; --pb-dark: #141414; --pb-ink: #141414; --pb-muted: #7b6d64; --pb-rose: #dccdc4; --pb-gold: #c9a96e; --pb-tan: #c4a07a; --pb-line: rgba(47, 47, 47, .14);
+	--pb-serif: "Italiana", Georgia, serif; --pb-sans: "Adelle sans", Helvetica, Arial, sans-serif; --pb-text: "Adelle sans", Helvetica, Arial, sans-serif;
 	background: var(--pb-cream) !important;
 }
 body.pb-checkout-page .title-bar, body.pb-checkout-page .entry-title, body.pb-checkout-page .page-title, body.pb-checkout-page h1.entry-title { display: none !important; }
@@ -132,3 +132,22 @@ body.pb-checkout-page form.checkout .woocommerce-account-fields { margin-top: 8p
 body.pb-checkout-page form.checkout #order_review_heading { margin-bottom: 28px; align-self: end; }
 /* Niente pulsanti express (Apple Pay / Google Pay / Link) sopra il modulo */
 body.pb-checkout-page #wc-stripe-express-checkout-element, body.pb-checkout-page .wc-stripe-express-checkout-element, body.pb-checkout-page #wc-stripe-express-checkout__wrapper, body.pb-checkout-page #wc-stripe-payment-request-wrapper, body.pb-checkout-page #wc-stripe-payment-request-button-separator, body.pb-checkout-page #wc-stripe-express-checkout-button-separator { display: none !important; }
+
+/* Allineamento al sito */
+body.pb-checkout-page form.checkout #place_order, body.pb-checkout-page form.woocommerce-form-login.login button[name="login"] { height: auto; padding: 14px 24px; border: 1px solid #141414; background: transparent; color: #141414; font-family: "Adelle sans", Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 500; letter-spacing: 0; text-transform: none; line-height: 1; transition: background-color .3s, color .3s; }
+body.pb-checkout-page form.checkout #place_order:hover, body.pb-checkout-page form.woocommerce-form-login.login button[name="login"]:hover { background: #141414; color: #fffefb; opacity: 1; }
+body.pb-checkout-page form.checkout #place_order:disabled { opacity: .35; }
+.pb-co-intro .pb-title { font-size: 40px; }
+.pb-co-intro .pb-lead, body.pb-checkout-page form.checkout .form-row input.input-text, body.pb-checkout-page form.checkout table.shop_table { font-size: 15px; letter-spacing: 0; }
+body.pb-checkout-page form.checkout table.shop_table td.product-name { font-size: 24px; }
+body.pb-checkout-page form.checkout table.shop_table tr.order-total td { font-size: 28px; }
+@media (max-width: 767px) { .pb-co-intro .pb-title { font-size: 32px; } body.pb-checkout-page form.checkout #order_review { padding: 20px; } }
+/* Campi fatturazione: indirizzo a tutta riga, CF a tutta riga; nota venditore */
+body.pb-checkout-page form.checkout .form-row.form-row-wide { grid-column: 1 / -1; }
+.pb-co-seller { margin: 18px 0 0 !important; font-size: 11px; line-height: 1.7; color: var(--pb-muted); }
+body.pb-checkout-page form.checkout .woocommerce-billing-fields .form-row select, body.pb-checkout-page form.checkout .select2-container--default .select2-selection--single { height: auto; padding: 4px 0 12px; border: 0; border-bottom: 1px solid #d9d6d1; border-radius: 0; background: transparent; font-family: var(--pb-sans); font-size: 15px; font-weight: 300; color: var(--pb-ink); }
+body.pb-checkout-page form.checkout .select2-container--default .select2-selection--single .select2-selection__rendered { padding-left: 0; color: var(--pb-ink); line-height: 1.4; }
+body.pb-checkout-page form.checkout .select2-container--default .select2-selection--single .select2-selection__arrow { top: -4px; }
+body.pb-checkout-page form.checkout .woocommerce-terms-and-conditions-wrapper .woocommerce-form__label-for-checkbox { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; letter-spacing: 0; text-transform: none; font-family: var(--pb-sans); font-weight: 300; color: var(--pb-ink); }
+body.pb-checkout-page form.checkout .woocommerce-terms-and-conditions-wrapper .woocommerce-form__label-for-checkbox input { margin-top: 3px; accent-color: var(--pb-dark); }
+body.pb-checkout-page form.checkout .woocommerce-terms-and-conditions { background: var(--pb-sand); padding: 16px; max-height: 180px; overflow: auto; font-size: 12px; margin-bottom: 12px; }

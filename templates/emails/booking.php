@@ -29,7 +29,7 @@ foreach ( array_filter( explode( "\n", (string) $intro ) ) as $line ) {
 }
 
 if ( ! empty( $extra['message'] ) ) {
-	echo '<blockquote style="margin:16px 0;padding:12px 16px;border-left:3px solid ' . esc_attr( $accent ) . ';background:#f7f4f0;">' . wp_kses_post( nl2br( esc_html( $extra['message'] ) ) ) . '</blockquote>';
+	echo '<blockquote style="margin:16px 0;padding:12px 16px;border-left:3px solid #141414;background:#f2eee8;">' . wp_kses_post( nl2br( esc_html( $extra['message'] ) ) ) . '</blockquote>';
 }
 
 if ( ! empty( $extra['conflict'] ) ) {
@@ -151,7 +151,7 @@ if ( $delivery ) {
 }
 
 if ( $button ) {
-	echo '<p style="text-align:center;margin:24px 0;"><a href="' . esc_url( $button[1] ) . '" style="display:inline-block;padding:12px 24px;background:' . esc_attr( $accent ) . ';color:#ffffff;text-decoration:none;border-radius:4px;font-weight:bold;">' . esc_html( $button[0] ) . '</a></p>';
+	echo '<p style="text-align:center;margin:24px 0;"><a href="' . esc_url( $button[1] ) . '" style="display:inline-block;padding:12px 24px;background:#141414;border:1px solid #141414;color:#fffefb;text-decoration:none;border-radius:0;font-weight:500;font-family:Helvetica,Arial,sans-serif;">' . esc_html( $button[0] ) . '</a></p>';
 }
 
 if ( $additional_content ) {

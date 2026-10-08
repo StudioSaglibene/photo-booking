@@ -7,7 +7,7 @@
  * Requires PHP:      7.4
  * Requires Plugins:  woocommerce
  * WC requires at least: 8.5
- * Author:            KPS Factory
+ * Author:            Emanuele Archintelli
  * Text Domain:       photo-booking
  * Domain Path:       /languages
  * License:           GPL-2.0-or-later

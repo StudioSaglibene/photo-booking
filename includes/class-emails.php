@@ -10,6 +10,7 @@ defined( 'ABSPATH' ) || exit;
 class Emails {
 
 	public static function init() {
+		add_filter( 'woocommerce_email_styles', array( __CLASS__, 'email_styles' ) );
 		add_filter( 'woocommerce_email_classes', array( __CLASS__, 'register' ) );
 	}
 
@@ -207,6 +208,22 @@ class Emails {
 	 * @param Appointment|array|object     $object Appointment, or delivery row.
 	 * @param array                        $extra
 	 */
+	/** Email look in line with the booking page: serif headings, black buttons, soft cream background. */
+	public static function email_styles( $css ) {
+		return $css . '
+		#wrapper { background-color: #f2eee8 !important; padding: 48px 0 !important; }
+		#template_container { box-shadow: none !important; border-radius: 0 !important; border: 1px solid #e6dfd6 !important; background: #fffefb !important; }
+		#template_header { background-color: #fffefb !important; border-bottom: 1px solid #e6dfd6 !important; border-radius: 0 !important; }
+		#template_header h1 { color: #141414 !important; font-family: Georgia, "Times New Roman", serif !important; font-weight: 400 !important; font-size: 30px !important; letter-spacing: 0 !important; text-shadow: none !important; }
+		#body_content, #body_content_inner, #template_body td { background: #fffefb !important; color: #141414 !important; font-family: Helvetica, Arial, sans-serif !important; font-size: 15px !important; line-height: 1.7 !important; }
+		#body_content_inner h2, #body_content_inner h3 { color: #141414 !important; font-family: Georgia, "Times New Roman", serif !important; font-weight: 400 !important; }
+		#body_content_inner a { color: #141414 !important; }
+		#body_content_inner .pb-button, #body_content_inner a.button, #body_content_inner .button { display: inline-block !important; padding: 12px 24px !important; border: 1px solid #141414 !important; background: #141414 !important; color: #fffefb !important; text-decoration: none !important; font-weight: 500 !important; border-radius: 0 !important; }
+		#body_content_inner table.td, #body_content_inner table.td th, #body_content_inner table.td td { border-color: #e6dfd6 !important; color: #141414 !important; }
+		#template_footer, #template_footer td, #template_footer #credit { color: #7b6d64 !important; font-family: Helvetica, Arial, sans-serif !important; font-size: 12px !important; }
+		';
+	}
+
 	public static function send( $key, $object, array $extra = array() ) {
 		if ( ! function_exists( 'WC' ) ) {
 			return false;

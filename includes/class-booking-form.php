@@ -33,9 +33,18 @@ class Booking_Form {
 		wp_add_inline_style( 'pb-front', '.pb-booking,.pb-account{--pb-accent:' . ( sanitize_hex_color( Settings::get( 'accent_color' ) ) ?: '#8a6d4b' ) . ';}' );
 		wp_register_script( 'pb-picker', PB_URL . 'assets/js/slot-picker.js', array(), PB_VERSION, true );
 		wp_register_script( 'pb-booking', PB_URL . 'assets/js/booking.js', array( 'pb-picker' ), PB_VERSION, true );
-		wp_register_style( 'pb-flow-fonts', 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Libre+Franklin:wght@300;400&family=Nunito+Sans:wght@300;400;500&display=swap', array(), null ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
+		wp_register_style( 'pb-flow-fonts', PB_URL . 'assets/css/fonts.css', array(), PB_VERSION );
+		// Elementor would load "Italiana" from Google: we serve it locally (privacy, no external calls).
+		add_filter( 'elementor/frontend/print_google_fonts', '__return_false' );
+		wp_enqueue_style( 'pb-flow-fonts' );
 		wp_register_style( 'pb-flow', PB_URL . 'assets/css/booking-flow.css', array( 'pb-flow-fonts' ), PB_VERSION );
-		wp_register_script( 'pb-flow', PB_URL . 'assets/js/booking-flow.js', array( 'pb-picker' ), PB_VERSION, true );
+		wp_register_style( 'pb-toast', PB_URL . 'assets/css/toast.css', array(), PB_VERSION );
+		wp_register_script( 'pb-toast', PB_URL . 'assets/js/toast.js', array( 'jquery' ), PB_VERSION, true );
+		wp_register_script( 'pb-flow', PB_URL . 'assets/js/booking-flow.js', array( 'pb-picker', 'pb-toast' ), PB_VERSION, true );
+		if ( self::is_booking_page() || ( function_exists( 'is_account_page' ) && ( is_account_page() || is_checkout() ) ) ) {
+			wp_enqueue_style( 'pb-toast' );
+			wp_enqueue_script( 'pb-toast' );
+		}
 		wp_enqueue_style( 'pb-header', PB_URL . 'assets/css/header.css', array(), PB_VERSION );
 		wp_localize_script( 'pb-picker', 'PB', self::js_config() );
 		if ( function_exists( 'is_account_page' ) && is_account_page() ) {
@@ -60,7 +69,11 @@ class Booking_Form {
 		if ( $id && is_page( $id ) ) {
 			return true;
 		}
-		return function_exists( 'is_checkout' ) && ( is_checkout() || is_account_page() || is_cart() );
+		if ( function_exists( 'is_checkout' ) && ( is_checkout() || is_account_page() || is_cart() ) ) {
+			return true;
+		}
+		// Legal pages have no hero image: same light header.
+		return is_page( array( 'privacy-policy', 'cookie-policy', 'condizioni-di-vendita' ) );
 	}
 
 	public static function js_config() {

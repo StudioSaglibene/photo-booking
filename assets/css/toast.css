@@ -1,0 +1,13 @@
+.pb-toasts { position: fixed; right: 20px; bottom: 20px; z-index: 100001; display: flex; flex-direction: column; gap: 10px; max-width: min(380px, calc(100vw - 40px)); }
+.pb-toast { display: flex; align-items: flex-start; gap: 12px; padding: 14px 14px 14px 16px; background: #141414; color: #fffefb; font-family: "Adelle sans", Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.5; font-weight: 300; box-shadow: 0 10px 30px rgba(0, 0, 0, .18); opacity: 0; transform: translateY(12px); transition: opacity .3s, transform .3s; }
+.pb-toast.is-in { opacity: 1; transform: none; }
+.pb-toast-icon { flex: none; display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .5); font-size: 12px; font-weight: 600; margin-top: 1px; }
+.pb-toast.is-success .pb-toast-icon { border-color: #9fd3a6; color: #9fd3a6; }
+.pb-toast.is-error { background: #7a2b1f; }
+.pb-toast.is-info .pb-toast-icon { color: #e6cfa6; border-color: #e6cfa6; }
+.pb-toast-body { flex: 1; }
+.pb-toast-body a { color: #fffefb; text-decoration: underline; text-underline-offset: 3px; }
+.pb-toast-close { flex: none; background: none; border: 0; padding: 0 2px; margin: -2px 0 0; color: rgba(255, 255, 255, .7); font-size: 20px; line-height: 1; cursor: pointer; }
+.pb-toast-close:hover { color: #fff; background: none; }
+.woocommerce-message.pb-toasted, .woocommerce-info.pb-toasted { display: none !important; }
+@media (max-width: 600px) { .pb-toasts { right: 12px; left: 12px; bottom: 12px; max-width: none; } }

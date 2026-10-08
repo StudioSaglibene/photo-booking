@@ -299,6 +299,13 @@ class Deliveries {
 			wp_die( esc_html( $r2->get_error_message() ) );
 		}
 		if ( ! $is_admin ) {
+			// One download link every 30 seconds per customer and delivery (no double clicks, no hammering).
+			$throttle = 'pb_dl_' . get_current_user_id() . '_' . $id;
+			if ( get_transient( $throttle ) ) {
+				wp_safe_redirect( add_query_arg( 'pb_wait', '1', wc_get_account_endpoint_url( Account::EP_DELIVERIES ) ) );
+				exit;
+			}
+			set_transient( $throttle, 1, 30 );
 			global $wpdb;
 			$t = Install::table( 'deliveries' );
 			$wpdb->query( $wpdb->prepare( "UPDATE {$t} SET downloads = downloads + 1, last_download_at = %s WHERE id = %d", Time::now_db(), $id ) ); // phpcs:ignore
