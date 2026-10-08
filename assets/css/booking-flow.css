@@ -226,3 +226,4 @@ body.pb-booking-page #header .top-menu > li > a span { font-family: "Adelle sans
 	.pb-mode { padding: 14px; }
 	.pb-mode em { display: block; margin: 4px 0 0; }
 }
+@media (max-width: 767px) { body.pb-booking-page #header:not(.sticky-values) a.logo.sticky-logo img { width: 140px !important; max-width: 140px !important; height: auto !important; } }
