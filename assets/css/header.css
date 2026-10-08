@@ -12,4 +12,4 @@ body.pb-booking-page #header:not(.sticky-values) #header-tools .pb-account-link:
 @media (max-width: 767px) { #header #header-tools { display: flex !important; flex-wrap: nowrap !important; width: auto !important; align-items: center !important; } #header #header-tools .pb-account-link { margin-left: 8px !important; padding-left: 8px !important; } #header #header-tools .tools_button { padding: 8px 12px !important; } }
 /* Il tema disegna il logo "sticky" anche come sfondo: con il nostro logo visibile da subito lo togliamo per non vederlo doppio */
 body.pb-booking-page #header:not(.sticky-values) a.logo.sticky-logo { background: none !important; }
-@media (max-width: 767px) { body.pb-booking-page #header:not(.sticky-values) a.logo.sticky-logo img { max-width: 170px !important; } }
+@media (max-width: 767px) { body.pb-booking-page #header:not(.sticky-values) a.logo.sticky-logo img { max-width: 140px !important; } body.pb-booking-page #header:not(.sticky-values) .logo-container { min-width: 0 !important; width: auto !important; } }
