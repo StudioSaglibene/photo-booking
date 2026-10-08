@@ -63,3 +63,18 @@ body.pb-account-page .pb-account details summary { cursor: pointer; font-family:
 /* Date picker nell'area privata (spostamento) */
 body.pb-account-page .pb-picker-inner { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 40px; align-items: start; }
 @media (max-width: 767px) { body.pb-account-page .pb-picker-inner { grid-template-columns: 1fr; } body.pb-account-page .pb-summary, body.pb-account-page .pb-account dl { grid-template-columns: 1fr; gap: 4px 0; } body.pb-account-page .woocommerce-MyAccount-navigation ul { gap: 0 18px; } }
+/* Pannelli Sposta / Disdici */
+body.pb-account-page .pb-panel form { display: block; max-width: 560px; }
+body.pb-account-page .pb-panel > p { font-size: 15px; line-height: 1.8; margin-bottom: 20px; }
+body.pb-account-page .pb-account label.pb-radio { display: flex !important; align-items: center; gap: 14px; width: 100%; padding: 14px 16px; margin: 0 0 10px; border: 1px solid #e6e0d9; background: #fff; font-family: var(--pb-sans); font-size: 15px; font-weight: 300; letter-spacing: 0; text-transform: none; color: var(--pb-ink); cursor: pointer; white-space: normal; }
+body.pb-account-page .pb-account label.pb-radio:has(input:checked) { border-color: var(--pb-dark); }
+body.pb-account-page .pb-account label.pb-radio input { margin: 0; flex: none; accent-color: var(--pb-dark); }
+body.pb-account-page .pb-account .pb-field { display: block; margin: 20px 0 24px; }
+body.pb-account-page .pb-account .pb-field label { display: block; font-family: var(--pb-sans); font-size: 9px; font-weight: 600; letter-spacing: 2.6px; text-transform: uppercase; color: var(--pb-ink); margin: 0 0 8px; }
+body.pb-account-page .pb-account .pb-field textarea { width: 100%; min-height: 80px; padding: 10px 0; border: 0; border-bottom: 1px solid #d9d6d1; border-radius: 0; background: transparent; box-shadow: none; font-family: var(--pb-sans); font-size: 15px; font-weight: 300; color: var(--pb-ink); resize: vertical; }
+body.pb-account-page .pb-account .pb-field textarea:focus { outline: none; border-color: var(--pb-dark); }
+body.pb-account-page .pb-account .button.pb-danger { border-color: #8c2f1f; color: #8c2f1f; }
+body.pb-account-page .pb-account .button.pb-danger:hover { background: #8c2f1f; color: #fffefb; }
+body.pb-account-page .pb-account form p:last-child { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin: 0; }
+body.pb-account-page .pb-account .pb-link-danger { color: #8c2f1f; }
+body.pb-account-page .pb-account .pb-policy-box, body.pb-account-page .pb-account details.pb-policy-box { margin-top: 32px; }
