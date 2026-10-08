@@ -19,7 +19,7 @@ class Booking_Form {
 		add_action( 'template_redirect', array( __CLASS__, 'hide_shop' ), 1 );
 		add_filter( 'wp_sitemaps_post_types', array( __CLASS__, 'sitemap_no_products' ) );
 		add_filter( 'wp_sitemaps_taxonomies', array( __CLASS__, 'sitemap_no_product_taxonomies' ) );
-		add_filter( 'wp_robots', array( __CLASS__, 'robots_noindex_shop' ) );
+		add_filter( 'wp_robots', array( __CLASS__, 'robots_noindex_shop' ), 99 );
 	}
 
 	/**
