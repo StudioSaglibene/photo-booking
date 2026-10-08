@@ -56,6 +56,7 @@ class Booking_Form {
 		if ( function_exists( 'is_checkout' ) && ( is_checkout() || is_account_page() || is_cart() ) ) {
 			$robots['noindex']  = true;
 			$robots['nofollow'] = true;
+			unset( $robots['follow'] );
 		}
 		return $robots;
 	}
