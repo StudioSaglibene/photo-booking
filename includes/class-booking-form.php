@@ -16,6 +16,48 @@ class Booking_Form {
 		add_action( 'wp_loaded', array( __CLASS__, 'handle_post' ), 30 );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'register_assets' ) );
 		add_filter( 'apollo13framework_header_tools', array( __CLASS__, 'header_account_link' ) );
+		add_action( 'template_redirect', array( __CLASS__, 'hide_shop' ), 1 );
+		add_filter( 'wp_sitemaps_post_types', array( __CLASS__, 'sitemap_no_products' ) );
+		add_filter( 'wp_sitemaps_taxonomies', array( __CLASS__, 'sitemap_no_product_taxonomies' ) );
+		add_filter( 'wp_robots', array( __CLASS__, 'robots_noindex_shop' ) );
+	}
+
+	/**
+	 * The shop, the product pages, categories and the cart have no role here: everything goes through the
+	 * booking page. Permanent redirects, so search engines drop them.
+	 */
+	public static function hide_shop() {
+		if ( ! function_exists( 'is_shop' ) || is_admin() ) {
+			return;
+		}
+		if ( is_product() ) {
+			$args = Package::is_package( get_queried_object_id() ) ? array( 'pacchetto' => get_queried_object_id() ) : array();
+			wp_safe_redirect( Settings::booking_page_url( $args ), 301 );
+			exit;
+		}
+		if ( is_shop() || is_product_taxonomy() || is_cart() || is_post_type_archive( 'product' ) ) {
+			wp_safe_redirect( Settings::booking_page_url(), 301 );
+			exit;
+		}
+	}
+
+	public static function sitemap_no_products( $types ) {
+		unset( $types['product'] );
+		return $types;
+	}
+
+	public static function sitemap_no_product_taxonomies( $taxonomies ) {
+		unset( $taxonomies['product_cat'], $taxonomies['product_tag'] );
+		return $taxonomies;
+	}
+
+	/** Checkout, account and order pages are personal: never in the search results. */
+	public static function robots_noindex_shop( $robots ) {
+		if ( function_exists( 'is_checkout' ) && ( is_checkout() || is_account_page() || is_cart() ) ) {
+			$robots['noindex']  = true;
+			$robots['nofollow'] = true;
+		}
+		return $robots;
 	}
 
 	/** "Accedi" / "Area riservata" link next to the Prenota button in the theme header (Rife). */
