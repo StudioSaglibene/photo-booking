@@ -23,6 +23,9 @@ defined( 'ABSPATH' ) || exit;
 class Admin {
 
 	public static function init() {
+		add_action( 'admin_menu', array( __CLASS__, 'trim_menu' ), 999 );
+		add_action( 'admin_bar_menu', array( __CLASS__, 'trim_admin_bar' ), 999 );
+		add_action( 'admin_init', array( __CLASS__, 'studio_dashboard_redirect' ) );
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'assets' ) );
 		add_action( 'admin_post_pb_admin', array( __CLASS__, 'handle' ) );
@@ -152,6 +155,54 @@ class Admin {
 	private static function view( $name, array $vars = array() ) {
 		extract( $vars ); // phpcs:ignore WordPress.PHP.DontExtract.extract_extract
 		include PB_DIR . 'admin-views/' . $name . '.php';
+	}
+
+	private static function is_studio_user() {
+		$u = wp_get_current_user();
+		return $u && in_array( Install::ROLE, (array) $u->roles, true ) && ! current_user_can( 'manage_options' );
+	}
+
+	/** The photographer sees only what she uses. */
+	public static function trim_menu() {
+		if ( ! self::is_studio_user() ) {
+			return;
+		}
+		foreach ( array( 'index.php', 'edit.php', 'edit.php?post_type=page', 'edit-comments.php', 'themes.php', 'plugins.php', 'tools.php', 'options-general.php', 'elementor', 'edit.php?post_type=elementor_library', 'wpforms-overview', 'maintenance', 'edit.php?post_type=works', 'edit.php?post_type=albums', 'edit.php?post_type=people', 'edit.php?post_type=a13_albums', 'edit.php?post_type=a13_works', 'wc-admin&path=/analytics/overview', 'wc-admin&path=/marketing', 'woocommerce-marketing', 'wp-mail-smtp', 'bsf-custom-fonts', 'edit.php?post_type=product&page=product_attributes', 'elementor-home', 'import.php', 'admin.php?page=wc-settings&tab=checkout&from=PAYMENTS_MENU_ITEM' ) as $slug ) {
+			remove_menu_page( $slug );
+		}
+		// Leftover taxonomy entries (categories of posts, albums, works, people, Elementor) once their parents are gone.
+		foreach ( (array) $GLOBALS['menu'] as $item ) {
+			if ( isset( $item[2] ) && ( 0 === strpos( $item[2], 'edit-tags.php' ) || 0 === strpos( $item[2], 'admin.php?page=wc-settings' ) ) ) {
+				remove_menu_page( $item[2] );
+			}
+		}
+		remove_submenu_page( 'woocommerce', 'wc-settings' );
+		remove_submenu_page( 'woocommerce', 'wc-status' );
+		remove_submenu_page( 'woocommerce', 'wc-addons' );
+		remove_submenu_page( 'woocommerce', 'wc-admin&path=/extensions' );
+		remove_submenu_page( 'woocommerce', 'wc-reports' );
+		remove_submenu_page( 'woocommerce', 'wc-admin' );
+		remove_submenu_page( 'edit.php?post_type=product', 'product_attributes' );
+		remove_submenu_page( 'edit.php?post_type=product', 'edit-tags.php?taxonomy=product_tag&post_type=product' );
+		remove_submenu_page( 'users.php', 'user-new.php' );
+	}
+
+	public static function trim_admin_bar( $bar ) {
+		if ( ! self::is_studio_user() ) {
+			return;
+		}
+		foreach ( array( 'wp-logo', 'updates', 'comments', 'new-content', 'customize', 'elementor_edit_page', 'wpforms-menu', 'maintenance', 'themes', 'site-name' ) as $id ) {
+			$bar->remove_node( $id );
+		}
+	}
+
+	/** The dashboard is hidden: land on the calendar instead. */
+	public static function studio_dashboard_redirect() {
+		global $pagenow;
+		if ( 'index.php' === $pagenow && self::is_studio_user() && empty( $_GET['page'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+			wp_safe_redirect( admin_url( 'admin.php?page=pb-calendar' ) );
+			exit;
+		}
 	}
 
 	public static function page_calendar() {

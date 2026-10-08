@@ -20,6 +20,7 @@ class Plugin {
 	private function __construct() {
 		load_plugin_textdomain( 'photo-booking', false, dirname( plugin_basename( PB_FILE ) ) . '/languages' );
 		Install::maybe_upgrade();
+		add_filter( 'login_redirect', array( Install::class, 'studio_login_redirect' ), 999, 3 );
 
 		Package::init();
 		Booking_Form::init();

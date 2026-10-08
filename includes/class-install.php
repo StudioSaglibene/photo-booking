@@ -159,6 +159,16 @@ class Install {
 		}
 	}
 
+	const ROLE = 'pb_studio';
+
+	/** The photographer lands on the calendar after login (wp-login.php is not an admin screen, so this lives here). */
+	public static function studio_login_redirect( $redirect, $requested, $user ) {
+		if ( $user instanceof \WP_User && in_array( self::ROLE, (array) $user->roles, true ) ) {
+			return admin_url( 'admin.php?page=pb-calendar' );
+		}
+		return $redirect;
+	}
+
 	public static function add_caps() {
 		foreach ( array( 'administrator', 'shop_manager' ) as $role_name ) {
 			$role = get_role( $role_name );
@@ -166,5 +176,39 @@ class Install {
 				$role->add_cap( self::CAP );
 			}
 		}
+		self::add_studio_role();
+	}
+
+	/**
+	 * "Studio" role for the photographer: bookings, deliveries, packages, orders, customers, media and the
+	 * WooCommerce emails. No themes, plugins, pages, posts or WordPress settings (see Admin::trim_menu).
+	 */
+	public static function add_studio_role() {
+		$shop = get_role( 'shop_manager' );
+		$caps = $shop ? $shop->capabilities : array();
+		$caps = array_merge(
+			$caps,
+			array(
+				'read'                 => true,
+				'upload_files'         => true,
+				'list_users'           => true,
+				'edit_users'           => true,
+				'create_users'         => false,
+				'delete_users'         => false,
+				'promote_users'        => false,
+				'edit_posts'           => false,
+				'edit_pages'           => false,
+				'manage_options'       => false,
+				'edit_theme_options'   => false,
+				'activate_plugins'     => false,
+				'install_plugins'      => false,
+				'update_plugins'       => false,
+				'update_core'          => false,
+				'view_woocommerce_reports' => true,
+				self::CAP              => true,
+			)
+		);
+		remove_role( self::ROLE );
+		add_role( self::ROLE, __( 'Studio fotografico', 'photo-booking' ), array_filter( $caps ) );
 	}
 }
