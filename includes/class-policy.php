@@ -8,8 +8,9 @@ defined( 'ABSPATH' ) || exit;
  */
 class Policy {
 
-	const OUTCOME_CHOICE = 'choice'; // Customer chooses refund or credit.
-	const OUTCOME_CREDIT = 'credit';
+	const OUTCOME_CHOICE = 'choice'; // (legacy) customer chooses refund or credit.
+	const OUTCOME_REFUND = 'refund'; // Full refund on the original payment method.
+	const OUTCOME_CREDIT = 'credit'; // (legacy, admin only) amount turned into a credit.
 	const OUTCOME_LOST   = 'lost';
 
 	/**
@@ -20,20 +21,15 @@ class Policy {
 	public static function cancel_outcome( Appointment $appt ) {
 		$hours        = $appt->hours_until_start();
 		$refund_hours = (int) Settings::get( 'refund_min_days' ) * 24;
-		$credit_hours = (int) Settings::get( 'credit_min_hours' );
-		$months       = (int) Settings::get( 'credit_validity_months' );
 
-		// Not yet confirmed: the customer can always get the money back.
+		// Not yet confirmed, or far enough in advance: the customer gets the money back. No credits/points for customers.
 		if ( in_array( $appt->status, array( Appointment::PENDING, Appointment::PROPOSED, Appointment::PROPOSAL_EXPIRED, Appointment::NEEDS_ACTION ), true ) || $hours >= $refund_hours ) {
-			$type = self::OUTCOME_CHOICE;
-			$desc = __( 'Puoi scegliere tra il rimborso sul metodo di pagamento usato oppure un credito da usare per un altro servizio.', 'photo-booking' );
-		} elseif ( $hours >= $credit_hours ) {
-			$type = self::OUTCOME_CREDIT;
-			/* translators: %d months */
-			$desc = sprintf( __( 'L\'importo versato diventa un credito valido %d mesi su qualsiasi servizio in studio.', 'photo-booking' ), $months );
+			$type = self::OUTCOME_REFUND;
+			$desc = __( 'L\'importo versato ti viene rimborsato per intero sul metodo di pagamento usato.', 'photo-booking' );
 		} else {
 			$type = self::OUTCOME_LOST;
-			$desc = __( 'Mancano meno di 24 ore all\'appuntamento: secondo le condizioni di prenotazione l\'importo versato non viene restituito.', 'photo-booking' );
+			/* translators: %d days */
+			$desc = sprintf( __( 'Mancano meno di %d giorni all\'appuntamento: secondo le condizioni di prenotazione l\'importo versato non viene restituito.', 'photo-booking' ), (int) Settings::get( 'refund_min_days' ) );
 		}
 		if ( $appt->paid <= 0 ) {
 			$desc = __( 'Non hai effettuato pagamenti per questa prenotazione.', 'photo-booking' );

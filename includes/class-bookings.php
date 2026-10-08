@@ -471,12 +471,12 @@ class Bookings {
 			}
 			// The customer cannot pick a better outcome than the policy allows.
 			$policy = Policy::cancel_outcome( $appt );
-			if ( Policy::OUTCOME_CREDIT === $policy['type'] ) {
-				$outcome = 'credit';
-			} elseif ( Policy::OUTCOME_LOST === $policy['type'] ) {
+			if ( Policy::OUTCOME_LOST === $policy['type'] ) {
 				$outcome = 'lost';
+			} elseif ( Policy::OUTCOME_CREDIT === $policy['type'] ) {
+				$outcome = 'credit';
 			} else {
-				$outcome = 'credit' === $outcome ? 'credit' : 'refund';
+				$outcome = 'refund';
 			}
 		}
 		self::close_proposals( $appt, 'cancelled' );

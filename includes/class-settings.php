@@ -38,7 +38,7 @@ class Settings {
 			'refund_min_days'         => 7,
 			'credit_min_hours'        => 24,
 			'credit_validity_months'  => 12,
-			'policy_text'             => "Fino a 7 giorni prima: rimborso completo oppure credito, a tua scelta.\nDa 7 giorni a 24 ore prima: l'importo versato diventa un credito valido 12 mesi su qualsiasi servizio in studio.\nMeno di 24 ore prima o mancata presentazione: l'importo versato non viene restituito.\nPuoi spostare gratuitamente l'appuntamento una volta, fino a 48 ore prima.\nSe annulliamo noi la sessione, rimborso completo o nuova data a tua scelta.",
+			'policy_text'             => "Fino a 7 giorni prima: rimborso completo di quanto versato.\nMeno di 7 giorni prima o mancata presentazione: l'acconto versato non viene restituito.\nPuoi spostare gratuitamente l'appuntamento una volta, fino a 48 ore prima.\nSe annulliamo noi la sessione, rimborso completo o nuova data a tua scelta.",
 			'reminder_enabled'        => 1,
 			'studio_address'          => '',
 			// Deliveries / R2.

@@ -125,9 +125,9 @@ $nonce = static function () use ( $a ) {
 				<form method="post">
 					<?php $nonce(); ?>
 					<input type="hidden" name="pb_account_action" value="cancel">
-					<?php if ( Policy::OUTCOME_CHOICE === $outcome['type'] && $a->paid > 0 ) : ?>
-						<label class="pb-radio"><input type="radio" name="outcome" value="refund" checked> <?php echo wp_kses_post( sprintf( /* translators: %s amount */ __( 'Rimborso di %s', 'photo-booking' ), wc_price( $a->paid ) ) ); ?></label>
-						<label class="pb-radio"><input type="radio" name="outcome" value="credit"> <?php echo wp_kses_post( sprintf( /* translators: %s amount */ __( 'Credito di %s per un altro servizio', 'photo-booking' ), wc_price( $a->paid ) ) ); ?></label>
+					<?php if ( Policy::OUTCOME_REFUND === $outcome['type'] && $a->paid > 0 ) : ?>
+						<input type="hidden" name="outcome" value="refund">
+						<p><strong><?php echo wp_kses_post( sprintf( /* translators: %s amount */ __( 'Ti verranno rimborsati %s.', 'photo-booking' ), wc_price( $a->paid ) ) ); ?></strong></p>
 					<?php elseif ( Policy::OUTCOME_CREDIT === $outcome['type'] && $a->paid > 0 ) : ?>
 						<input type="hidden" name="outcome" value="credit">
 						<p><strong><?php echo wp_kses_post( sprintf( /* translators: %s amount */ __( 'Riceverai un credito di %s.', 'photo-booking' ), wc_price( $a->paid ) ) ); ?></strong></p>
