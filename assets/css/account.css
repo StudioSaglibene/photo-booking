@@ -78,3 +78,5 @@ body.pb-account-page .pb-account .button.pb-danger:hover { background: #8c2f1f; 
 body.pb-account-page .pb-account form p:last-child { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin: 0; }
 body.pb-account-page .pb-account .pb-link-danger { color: #8c2f1f; }
 body.pb-account-page .pb-account .pb-policy-box, body.pb-account-page .pb-account details.pb-policy-box { margin-top: 32px; }
+body.pb-account-page .pb-account label.pb-radio { border-radius: 0 !important; box-sizing: border-box; line-height: 1.4; }
+body.pb-account-page .pb-account label.pb-radio .woocommerce-Price-amount { margin: 0 4px; }
