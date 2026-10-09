@@ -44,7 +44,14 @@ class Availability {
 		}
 		$hours = Settings::get( 'hours' );
 		$dow   = (int) Time::parse( $date . ' 12:00:00' )->format( 'N' );
-		return self::parse_ranges( $hours[ $dow ] ?? '' );
+		if ( empty( $hours[ $dow ] ) ) {
+			return array(); // closed that day
+		}
+		// Package-specific hours (e.g. Christmas sessions from 9:00) replace the general ones on open days.
+		if ( ! empty( $cfg['hours'] ) ) {
+			return self::parse_ranges( $cfg['hours'] );
+		}
+		return self::parse_ranges( $hours[ $dow ] );
 	}
 
 	/**
@@ -137,7 +144,7 @@ class Availability {
 
 		$duration = $cfg['duration'] * 60;
 		$buffer   = $cfg['buffer'] * 60;
-		$step     = (int) Settings::get( 'slot_interval' );
+		$step     = ! empty( $cfg['step'] ) ? (int) $cfg['step'] : (int) Settings::get( 'slot_interval' );
 		$step     = $step > 0 ? $step * 60 : $duration + $buffer;
 
 		if ( isset( $opts['busy'] ) ) {

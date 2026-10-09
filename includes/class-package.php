@@ -66,6 +66,8 @@ class Package {
 			'instructions' => (string) $product->get_meta( '_pb_instructions' ),
 			'label'        => (string) $product->get_meta( '_pb_label' ),
 			'pdf'          => (int) $product->get_meta( '_pb_pdf' ),
+			'hours'        => (string) $product->get_meta( '_pb_hours' ),
+			'step'         => max( 0, (int) $product->get_meta( '_pb_step' ) ),
 			'tiers'        => self::tiers( $product ),
 			'from'         => self::from_price( $product ),
 		);
@@ -224,6 +226,25 @@ class Package {
 				'id'                => '_pb_buffer',
 				'label'             => __( 'Pausa dopo la sessione (minuti)', 'photo-booking' ),
 				'description'       => __( 'Tempo tecnico prima del cliente successivo.', 'photo-booking' ),
+				'desc_tip'          => true,
+				'type'              => 'number',
+				'custom_attributes' => array( 'min' => 0, 'step' => 5 ),
+			)
+		);
+		woocommerce_wp_text_input(
+			array(
+				'id'          => '_pb_hours',
+				'label'       => __( 'Orari del pacchetto', 'photo-booking' ),
+				'description' => __( 'Se compilato, questo pacchetto usa queste fasce al posto degli orari generali, nei giorni di apertura (es. 09:00-18:00 oppure 10:00-13:00, 16:00-19:00).', 'photo-booking' ),
+				'desc_tip'    => true,
+				'placeholder' => '09:00-18:00',
+			)
+		);
+		woocommerce_wp_text_input(
+			array(
+				'id'                => '_pb_step',
+				'label'             => __( 'Passo degli orari (minuti)', 'photo-booking' ),
+				'description'       => __( 'Ogni quanti minuti parte una fascia per questo pacchetto. Vuoto = impostazione generale (0 = durata + pausa).', 'photo-booking' ),
 				'desc_tip'          => true,
 				'type'              => 'number',
 				'custom_attributes' => array( 'min' => 0, 'step' => 5 ),
@@ -414,6 +435,9 @@ class Package {
 		$product->update_meta_data( '_pb_includes', sanitize_textarea_field( wp_unslash( $_POST['_pb_includes'] ?? '' ) ) );
 		$product->update_meta_data( '_pb_instructions', wp_kses_post( wp_unslash( $_POST['_pb_instructions'] ?? '' ) ) );
 		$product->update_meta_data( '_pb_label', sanitize_text_field( wp_unslash( $_POST['_pb_label'] ?? '' ) ) );
+		$hours = sanitize_text_field( wp_unslash( $_POST['_pb_hours'] ?? '' ) );
+		$product->update_meta_data( '_pb_hours', Availability::parse_ranges( $hours ) ? $hours : '' );
+		$product->update_meta_data( '_pb_step', isset( $_POST['_pb_step'] ) && '' !== $_POST['_pb_step'] ? absint( $_POST['_pb_step'] ) : '' );
 		$pdf_id = absint( $_POST['_pb_pdf'] ?? 0 );
 		$product->update_meta_data( '_pb_pdf', ( $pdf_id && 'application/pdf' === get_post_mime_type( $pdf_id ) ) ? $pdf_id : '' );
 		$product->update_meta_data( '_pb_tiers', self::sanitize_tiers( $_POST['_pb_tiers'] ?? array() ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
