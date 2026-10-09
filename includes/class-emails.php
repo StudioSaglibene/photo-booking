@@ -11,6 +11,7 @@ class Emails {
 
 	public static function init() {
 		add_filter( 'woocommerce_email_styles', array( __CLASS__, 'email_styles' ) );
+		add_filter( 'woocommerce_email_attachments', array( __CLASS__, 'attachments' ), 10, 3 );
 		add_filter( 'woocommerce_email_classes', array( __CLASS__, 'register' ) );
 	}
 
@@ -222,6 +223,27 @@ class Emails {
 		#body_content_inner table.td, #body_content_inner table.td th, #body_content_inner table.td td { border-color: #e6dfd6 !important; color: #141414 !important; }
 		#template_footer, #template_footer td, #template_footer #credit { color: #7b6d64 !important; font-family: Helvetica, Arial, sans-serif !important; font-size: 12px !important; }
 		';
+	}
+
+	/**
+	 * Confirmation email: attach the package's own PDF sheet, or a generated one with the details of this booking.
+	 */
+	public static function attachments( $attachments, $email_id, $object ) {
+		if ( 'pb_confirmed' !== $email_id || ! $object instanceof Appointment ) {
+			return $attachments;
+		}
+		$cfg = Package::config( $object->product_id );
+		if ( ! empty( $cfg['pdf'] ) ) {
+			$file = get_attached_file( $cfg['pdf'] );
+			if ( $file && file_exists( $file ) ) {
+				$attachments[] = $file;
+			}
+		}
+		$sheet = Pdf::info_sheet( $object );
+		if ( $sheet && file_exists( $sheet ) ) {
+			$attachments[] = $sheet;
+		}
+		return $attachments;
 	}
 
 	public static function send( $key, $object, array $extra = array() ) {

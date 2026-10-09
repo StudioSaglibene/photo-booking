@@ -65,6 +65,7 @@ class Package {
 			'includes'     => (string) $product->get_meta( '_pb_includes' ),
 			'instructions' => (string) $product->get_meta( '_pb_instructions' ),
 			'label'        => (string) $product->get_meta( '_pb_label' ),
+			'pdf'          => (int) $product->get_meta( '_pb_pdf' ),
 			'tiers'        => self::tiers( $product ),
 			'from'         => self::from_price( $product ),
 		);
@@ -265,6 +266,11 @@ class Package {
 				'desc_tip'    => true,
 			)
 		);
+		$pdf_id = $product ? (int) $product->get_meta( '_pb_pdf' ) : 0;
+		echo '<p class="form-field"><label for="_pb_pdf">' . esc_html__( 'Scheda PDF per il cliente', 'photo-booking' ) . '</label>';
+		echo '<input type="hidden" id="_pb_pdf" name="_pb_pdf" value="' . esc_attr( $pdf_id ) . '"> <span class="pb-pdf-name">' . esc_html( $pdf_id ? basename( get_attached_file( $pdf_id ) ) : '' ) . '</span> ';
+		echo '<button type="button" class="button pb-pick-pdf">' . esc_html__( 'Scegli PDF', 'photo-booking' ) . '</button> <button type="button" class="button-link pb-clear-pdf"' . ( $pdf_id ? '' : ' style="display:none"' ) . '>' . esc_html__( 'Rimuovi', 'photo-booking' ) . '</button>';
+		echo '<span class="description" style="display:block;margin-top:4px">' . esc_html__( 'Allegato all\'email di conferma. Se vuoto, il sistema genera da solo una scheda con data, orario, cosa include, indicazioni e condizioni.', 'photo-booking' ) . '</span></p>';
 		echo '</div>';
 		self::tiers_panel( $product ? self::tiers( $product ) : array() );
 		echo '<div class="options_group pb-windows">';
@@ -408,6 +414,8 @@ class Package {
 		$product->update_meta_data( '_pb_includes', sanitize_textarea_field( wp_unslash( $_POST['_pb_includes'] ?? '' ) ) );
 		$product->update_meta_data( '_pb_instructions', wp_kses_post( wp_unslash( $_POST['_pb_instructions'] ?? '' ) ) );
 		$product->update_meta_data( '_pb_label', sanitize_text_field( wp_unslash( $_POST['_pb_label'] ?? '' ) ) );
+		$pdf_id = absint( $_POST['_pb_pdf'] ?? 0 );
+		$product->update_meta_data( '_pb_pdf', ( $pdf_id && 'application/pdf' === get_post_mime_type( $pdf_id ) ) ? $pdf_id : '' );
 		$product->update_meta_data( '_pb_tiers', self::sanitize_tiers( $_POST['_pb_tiers'] ?? array() ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 
 		$dates   = (array) ( $_POST['_pb_windows_date'] ?? array() );
@@ -466,6 +474,16 @@ class Package {
 				box.append($('#tmpl-pb-extra').html().split('__i__').join(tier.data('i')).split('__j__').join(j));
 			});
 			$(document).on('click', '.pb-del-extra', function(){ $(this).closest('.pb-extra').remove(); });
+			$(document).on('click', '.pb-pick-pdf', function(e){
+				e.preventDefault();
+				var frame = wp.media({ title: '<?php echo esc_js( __( 'Scheda PDF per il cliente', 'photo-booking' ) ); ?>', library: { type: 'application/pdf' }, multiple: false });
+				frame.on('select', function(){
+					var a = frame.state().get('selection').first().toJSON();
+					$('#_pb_pdf').val(a.id); $('.pb-pdf-name').text(a.filename || a.title); $('.pb-clear-pdf').show();
+				});
+				frame.open();
+			});
+			$(document).on('click', '.pb-clear-pdf', function(e){ e.preventDefault(); $('#_pb_pdf').val(''); $('.pb-pdf-name').text(''); $(this).hide(); });
 		});
 		</script>
 		<?php
