@@ -46,6 +46,7 @@ class Cron {
 		Bookings::expire_holds();
 		Bookings::expire_proposals();
 		Bookings::send_reminders();
+		Bookings::auto_complete();
 		Deliveries::cron();
 		update_option( 'pb_cron_last_run', time(), false );
 	}

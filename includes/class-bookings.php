@@ -552,6 +552,22 @@ class Bookings {
 		return $parts ? implode( ', ', $parts ) : 'nessun importo';
 	}
 
+	/** Confirmed sessions become "svolta" by themselves the day after they took place. */
+	public static function auto_complete() {
+		$done = Appointment::query(
+			array(
+				'status' => Appointment::CONFIRMED,
+				'to'     => Time::now()->modify( '-1 day' )->format( Time::DB ),
+				'limit'  => 100,
+			)
+		);
+		foreach ( $done as $appt ) {
+			if ( $appt->end_at < Time::now()->modify( '-1 day' )->format( Time::DB ) ) {
+				self::complete( $appt );
+			}
+		}
+	}
+
 	public static function complete( Appointment $appt ) {
 		$appt->update( array( 'status' => Appointment::COMPLETED ) );
 		$appt->log( 'completed', 'Sessione svolta' );
