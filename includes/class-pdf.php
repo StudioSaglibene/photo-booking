@@ -30,7 +30,7 @@ class Pdf {
 	}
 
 	private static function esc( $text ) {
-		$text = (string) iconv( 'UTF-8', 'ISO-8859-1//TRANSLIT', $text );
+		$text = (string) iconv( 'UTF-8', 'Windows-1252//TRANSLIT', $text );
 		return str_replace( array( '\\', '(', ')' ), array( '\\\\', '\\(', '\\)' ), $text );
 	}
 
