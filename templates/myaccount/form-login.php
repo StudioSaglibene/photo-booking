@@ -67,9 +67,6 @@ do_action( 'woocommerce_before_customer_login_form' );
 				<?php do_action( 'woocommerce_login_form_end' ); ?>
 			</form>
 
-			<div class="pb-login-divider"><span><?php esc_html_e( 'Non hai ancora un account?', 'photo-booking' ); ?></span></div>
-			<a class="pb-login-book" href="<?php echo esc_url( $book_url ); ?>"><?php esc_html_e( 'Prenota la tua prima sessione', 'photo-booking' ); ?> <span aria-hidden="true">→</span></a>
-			<p class="pb-login-hint"><?php esc_html_e( 'Il profilo viene creato durante la prenotazione: nessuna registrazione a parte.', 'photo-booking' ); ?></p>
 		</div>
 	</main>
 </div>

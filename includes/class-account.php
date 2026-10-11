@@ -13,12 +13,12 @@ class Account {
 
 	/** Logged-out customers on the account page get the plugin's own login screen. */
 	private static function is_login_screen() {
-		return function_exists( 'is_account_page' ) && is_account_page() && ! is_user_logged_in() && ! is_lost_password_page();
+		return function_exists( 'is_account_page' ) && is_account_page() && ! is_user_logged_in();
 	}
 
 	public static function login_template( $template, $template_name ) {
-		if ( 'myaccount/form-login.php' === $template_name && self::is_login_screen() ) {
-			return PB_DIR . 'templates/myaccount/form-login.php';
+		if ( in_array( $template_name, array( 'myaccount/form-login.php', 'myaccount/form-lost-password.php', 'myaccount/form-reset-password.php' ), true ) && self::is_login_screen() ) {
+			return PB_DIR . 'templates/' . $template_name;
 		}
 		return $template;
 	}
