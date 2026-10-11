@@ -27,6 +27,22 @@ class Install {
 		if ( get_option( 'pb_db_version' ) !== PB_DB_VERSION ) {
 			self::activate();
 		}
+		if ( get_option( 'pb_version' ) !== PB_VERSION ) {
+			self::upgrade_data();
+			update_option( 'pb_version', PB_VERSION, false );
+		}
+	}
+
+	/** One-off data fixes shipped with a release (so that a git deploy is enough, without touching the database by hand). */
+	private static function upgrade_data() {
+		$s = Settings::all();
+		if ( in_array( $s['studio_address'], array( '', 'Via Chiovaro 107, 90044 Carini (PA)', 'Via Mariagrazia Costanzo, Carini (PA)' ), true ) ) {
+			Settings::update( array( 'studio_address' => 'Via Mariagrazia Costanzo 1, 90044 Carini (PA)' ) );
+		}
+		$footer = (string) get_option( 'woocommerce_email_footer_text' );
+		if ( false !== strpos( $footer, 'Via Mariagrazia Costanzo, Carini' ) || false !== strpos( $footer, 'Via Chiovaro 107' ) ) {
+			update_option( 'woocommerce_email_footer_text', 'Viviana Saglibene Fotografia · Studio in Via Mariagrazia Costanzo 1, 90044 Carini (PA) · P. IVA 06942900827 · {site_url}' );
+		}
 	}
 
 	public static function table( $name ) {
