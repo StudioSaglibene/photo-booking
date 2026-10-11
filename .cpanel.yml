@@ -1,7 +1,10 @@
 ---
 # Deploy automatico cPanel (Git Version Control): copia il plugin nella cartella di WordPress a ogni "Deploy HEAD commit".
+# I permessi vengono normalizzati (cartelle 755, file 644): senza, Apache non vede i file e il sito risponde 404 su CSS e JS.
 deployment:
   tasks:
     - export DEPLOYPATH=/home2/pkvivian/public_html/wp-content/plugins/photo-booking
     - /bin/mkdir -p $DEPLOYPATH
-    - /usr/bin/rsync -a --delete --exclude '.git' --exclude '.cpanel.yml' ./ $DEPLOYPATH/
+    - /usr/bin/rsync -a --delete --exclude '.git' --exclude '.cpanel.yml' --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r ./ $DEPLOYPATH/
+    - /usr/bin/find $DEPLOYPATH -type d -exec /bin/chmod 755 {} +
+    - /usr/bin/find $DEPLOYPATH -type f -exec /bin/chmod 644 {} +
