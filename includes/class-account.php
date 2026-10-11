@@ -17,7 +17,7 @@ class Account {
 	}
 
 	public static function login_template( $template, $template_name ) {
-		if ( in_array( $template_name, array( 'myaccount/form-login.php', 'myaccount/form-lost-password.php', 'myaccount/form-reset-password.php' ), true ) && self::is_login_screen() ) {
+		if ( in_array( $template_name, array( 'myaccount/form-login.php', 'myaccount/form-lost-password.php', 'myaccount/form-reset-password.php', 'myaccount/lost-password-confirmation.php' ), true ) && self::is_login_screen() ) {
 			return PB_DIR . 'templates/' . $template_name;
 		}
 		return $template;
