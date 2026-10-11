@@ -52,10 +52,80 @@ class Install {
 		if ( false !== strpos( $footer, 'Costanzo' ) || false !== strpos( $footer, 'Chiovaro' ) ) {
 			update_option( 'woocommerce_email_footer_text', 'Viviana Saglibene Fotografia · ' . $addr . ' · P. IVA 06942900827 · {site_url}' );
 		}
+		add_action( 'init', array( __CLASS__, 'install_stock_images' ), 20 );
 		if ( 'Via Chiovaro 107' === get_option( 'woocommerce_store_address' ) ) {
 			update_option( 'woocommerce_store_address', 'Via Mariagrazia Costanzo 1' );
 			update_option( 'woocommerce_store_postcode', '90040' );
 		}
+	}
+
+	/**
+	 * Installs the stock photos shipped in assets/stock as package images and Prenota hero (once).
+	 */
+	public static function install_stock_images() {
+		if ( get_option( 'pb_stock_images' ) ) {
+			return;
+		}
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/media.php';
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+		$map = array(
+			'newborn'    => 'Newborn',
+			'maternita'  => 'Maternità',
+			'family'     => 'Family in studio',
+			'smash-cake' => 'Smash Cake',
+			'natale'     => 'Natale',
+		);
+		$ids = array();
+		foreach ( array_merge( array_keys( $map ), array( 'hero' ) ) as $key ) {
+			$src = PB_DIR . 'assets/stock/prenota-' . $key . '.jpg';
+			if ( ! file_exists( $src ) ) {
+				continue;
+			}
+			$tmp = wp_tempnam( 'prenota-' . $key . '.jpg' );
+			copy( $src, $tmp );
+			$id = media_handle_sideload( array( 'name' => 'prenota-' . $key . '.jpg', 'tmp_name' => $tmp ), 0, 'Prenota – ' . $key );
+			if ( ! is_wp_error( $id ) ) {
+				$ids[ $key ] = (int) $id;
+			}
+		}
+		foreach ( $map as $key => $title ) {
+			if ( empty( $ids[ $key ] ) ) {
+				continue;
+			}
+			$found = get_posts( array( 'post_type' => 'product', 'post_status' => 'publish', 'title' => $title, 'numberposts' => 1, 'fields' => 'ids' ) );
+			if ( $found ) {
+				set_post_thumbnail( $found[0], $ids[ $key ] );
+			}
+		}
+		$page = get_page_by_path( 'prenota' );
+		if ( $page && ! empty( $ids['hero'] ) ) {
+			$raw  = get_post_meta( $page->ID, '_elementor_data', true );
+			$data = json_decode( $raw, true );
+			if ( is_array( $data ) ) {
+				$done = false;
+				$walk = function ( &$els ) use ( &$walk, &$done, $ids ) {
+					foreach ( $els as &$el ) {
+						if ( ! $done && ! empty( $el['settings']['background_image']['id'] ) ) {
+							$el['settings']['background_image'] = array( 'id' => $ids['hero'], 'url' => wp_get_attachment_url( $ids['hero'] ) );
+							$done = true;
+						}
+						if ( ! empty( $el['elements'] ) ) {
+							$walk( $el['elements'] );
+						}
+					}
+				};
+				$walk( $data );
+				if ( $done ) {
+					update_post_meta( $page->ID, '_elementor_data', wp_slash( wp_json_encode( $data ) ) );
+					delete_post_meta( $page->ID, '_elementor_css' );
+					if ( class_exists( '\Elementor\Plugin' ) && isset( \Elementor\Plugin::$instance->files_manager ) ) {
+						\Elementor\Plugin::$instance->files_manager->clear_cache();
+					}
+				}
+			}
+		}
+		update_option( 'pb_stock_images', $ids, false );
 	}
 
 	public static function add_caps() {
