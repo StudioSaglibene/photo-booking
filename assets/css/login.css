@@ -8,7 +8,7 @@ body.pb-login-page .u-columns, body.pb-login-page .col2-set { display: block; }
 .pb-login *, .pb-login *::before, .pb-login *::after { box-sizing: border-box; }
 .pb-login p, .pb-login h1, .pb-login h2 { margin: 0; }
 .pb-login-visual { position: relative; background-size: cover; background-position: center top; min-height: 100%; }
-.pb-login-visual::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(35, 43, 43, .82) 0%, rgba(35, 43, 43, .35) 45%, rgba(35, 43, 43, .25) 100%); }
+.pb-login-visual::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: linear-gradient(to top, rgba(35, 43, 43, .82) 0%, rgba(35, 43, 43, .35) 45%, rgba(35, 43, 43, .25) 100%); }
 .pb-login-visual-inner { position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding: 56px 64px; color: #fefefb; }
 .pb-login-logo { display: inline-block; color: #fefefb; text-decoration: none; font-family: "Italiana", Georgia, serif; font-size: 22px; letter-spacing: 4px; text-transform: uppercase; }
 .pb-login-logo img { width: 190px; height: auto; display: block; }

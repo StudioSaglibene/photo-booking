@@ -54,9 +54,9 @@
 .pb-services { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 @media (max-width: 767px) { .pb-services { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } }
 .pb-flow .pb-service { position: relative; display: block; overflow: hidden; aspect-ratio: 3 / 4; padding: 0; margin: 0; border: 0; background: var(--pb-ink); cursor: pointer; text-align: center; opacity: 0; transform: translateY(20px); animation: pb-rise .7s cubic-bezier(.4, 0, .2, 1) forwards; animation-delay: calc(var(--i, 0) * 80ms + .1s); }
-.pb-flow .pb-service-img { position: absolute; inset: 0; width: 100% !important; height: 100% !important; max-width: none; margin: 0; object-fit: cover; object-position: center; border: 0; border-radius: 0; box-shadow: none; transition: transform .7s cubic-bezier(.4, 0, .2, 1); }
+.pb-flow .pb-service-img { position: absolute; top: 0; right: 0; bottom: 0; left: 0; width: 100% !important; height: 100% !important; max-width: none; margin: 0; object-fit: cover; object-position: center; border: 0; border-radius: 0; box-shadow: none; transition: transform .7s cubic-bezier(.4, 0, .2, 1); }
 .pb-service:hover .pb-service-img, .pb-service:focus-visible .pb-service-img { transform: scale(1.06); }
-.pb-service-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding: 20px; background-color: transparent !important; background-image: linear-gradient(to top, rgba(35, 43, 43, .95) 0%, rgba(35, 43, 43, .2) 55%, rgba(0, 0, 0, 0) 80%) !important; }
+.pb-service-overlay { position: absolute; top: 0; right: 0; bottom: 0; left: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding: 20px; background-color: transparent !important; background-image: linear-gradient(to top, rgba(35, 43, 43, .95) 0%, rgba(35, 43, 43, .2) 55%, rgba(0, 0, 0, 0) 80%) !important; }
 .pb-service-label { font-family: var(--pb-sans); font-size: 8px; font-weight: 500; letter-spacing: 2.24px; line-height: 12px; text-transform: uppercase; color: rgba(242, 238, 232, .45); margin-bottom: 6px; }
 .pb-service-name { font-family: var(--pb-serif); font-size: 17.4px; line-height: 1.2; color: var(--pb-cream); margin-bottom: 6px; }
 .pb-service-price { font-family: var(--pb-sans); font-size: 8px; font-weight: 500; letter-spacing: 2.24px; line-height: 12px; text-transform: uppercase; color: var(--pb-gold); }
@@ -231,6 +231,12 @@ body.pb-booking-page #header .top-menu > li > a span { font-family: "Adelle sans
 /* Robustezza su telefono: niente elementi invisibili se le animazioni sono disattivate (iOS "Riduci movimento") e niente aspect-ratio non supportato */
 .pb-flow .pb-service, .pb-flow .pb-tier { opacity: 1; transform: none; animation-fill-mode: backwards; }
 @media (prefers-reduced-motion: reduce) { .pb-flow .pb-service, .pb-flow .pb-tier, .pb-extras, .pb-flow-step.is-entering .pb-flow-wrap > * { animation: none !important; opacity: 1 !important; transform: none !important; } }
-@supports not (aspect-ratio: 3 / 4) { .pb-flow .pb-service { height: 0; padding-bottom: 133.33%; } .pb-flow .pb-service .pb-service-img, .pb-flow .pb-service .pb-service-overlay { position: absolute; } }
+
 .pb-tiers, .pb-services { overflow: visible; }
 .pb-service-intro { margin: -28px 0 40px !important; max-width: 640px; }
+
+/* Proporzione 3:4 delle card con un elemento fantasma: nessun aspect-ratio, nessuna altezza zero, la sezione cresce sempre con il contenuto */
+.pb-flow .pb-service { aspect-ratio: auto; height: auto; }
+.pb-flow .pb-service::before { content: ""; display: block; padding-top: 133.333%; }
+.pb-flow .pb-service-img, .pb-flow .pb-service-overlay { position: absolute; top: 0; right: 0; bottom: 0; left: 0; }
+.pb-flow-step, .pb-flow-wrap, .pb-services { height: auto !important; min-height: 0; max-height: none !important; overflow: visible; }
