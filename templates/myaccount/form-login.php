@@ -61,7 +61,7 @@ do_action( 'woocommerce_before_customer_login_form' );
 				<p class="pb-login-actions">
 					<?php wp_nonce_field( 'woocommerce-login', 'woocommerce-login-nonce' ); ?>
 					<input type="hidden" name="rememberme" value="forever">
-					<input type="hidden" name="redirect" value="<?php echo esc_url( wc_get_page_permalink( 'myaccount' ) ); ?>">
+					<input type="hidden" name="redirect" value="<?php echo esc_url( ! empty( $_GET['pb_to'] ) ? wp_validate_redirect( rawurldecode( wp_unslash( $_GET['pb_to'] ) ), wc_get_page_permalink( 'myaccount' ) ) : wc_get_page_permalink( 'myaccount' ) ); // phpcs:ignore WordPress.Security.NonceVerification ?>">
 					<button type="submit" class="pb-login-submit" name="login" value="<?php esc_attr_e( 'Accedi', 'photo-booking' ); ?>"><?php esc_html_e( 'Accedi', 'photo-booking' ); ?></button>
 				</p>
 				<?php do_action( 'woocommerce_login_form_end' ); ?>

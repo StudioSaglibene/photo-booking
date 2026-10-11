@@ -57,6 +57,7 @@ class Account {
 		add_filter( 'woocommerce_endpoint_' . self::EP_BOOKINGS . '_title', array( __CLASS__, 'title_bookings' ) );
 		add_filter( 'woocommerce_endpoint_' . self::EP_DELIVERIES . '_title', array( __CLASS__, 'title_deliveries' ) );
 		add_action( 'template_redirect', array( __CLASS__, 'handle_post' ), 20 );
+		add_action( 'template_redirect', array( __CLASS__, 'accept_from_email' ), 19 );
 		add_filter( 'wc_get_template', array( __CLASS__, 'login_template' ), 10, 2 );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'login_assets' ), 20 );
 		add_action( 'woocommerce_account_dashboard', array( __CLASS__, 'dashboard_summary' ) );
@@ -217,6 +218,48 @@ class Account {
 	/* ------------------------------------------------------------------ */
 	/* Actions                                                            */
 	/* ------------------------------------------------------------------ */
+
+	/** Signed link used in the "proposal" email: /mio-account/prenotazioni/?prenotazione=ID&accetta=PID&t=TOKEN */
+	public static function accept_token( $appointment_id, $proposal_id ) {
+		return substr( hash_hmac( 'sha256', 'pb-accept:' . (int) $appointment_id . ':' . (int) $proposal_id, wp_salt( 'nonce' ) ), 0, 24 );
+	}
+
+	public static function accept_link( $appointment_id, $proposal_id ) {
+		return add_query_arg(
+			array(
+				'prenotazione' => (int) $appointment_id,
+				'accetta'      => (int) $proposal_id,
+				't'            => self::accept_token( $appointment_id, $proposal_id ),
+			),
+			wc_get_account_endpoint_url( self::EP_BOOKINGS )
+		);
+	}
+
+	/** The customer clicked a date in the email: log in if needed, then accept that proposal. */
+	public static function accept_from_email() {
+		if ( empty( $_GET['accetta'] ) || empty( $_GET['prenotazione'] ) || empty( $_GET['t'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+			return;
+		}
+		$id  = absint( $_GET['prenotazione'] ); // phpcs:ignore WordPress.Security.NonceVerification
+		$pid = absint( $_GET['accetta'] ); // phpcs:ignore WordPress.Security.NonceVerification
+		if ( ! hash_equals( self::accept_token( $id, $pid ), sanitize_text_field( wp_unslash( $_GET['t'] ) ) ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+			wp_die( esc_html__( 'Link non valido.', 'photo-booking' ), '', array( 'response' => 403 ) );
+		}
+		if ( ! is_user_logged_in() ) {
+			$current = ( is_ssl() ? 'https://' : 'http://' ) . ( $_SERVER['HTTP_HOST'] ?? '' ) . ( $_SERVER['REQUEST_URI'] ?? '' ); // phpcs:ignore
+			wp_safe_redirect( add_query_arg( 'pb_to', rawurlencode( $current ), wc_get_page_permalink( 'myaccount' ) ) );
+			exit;
+		}
+		$a = self::own_appointment( $id );
+		if ( ! $a ) {
+			wc_add_notice( __( 'Prenotazione non trovata.', 'photo-booking' ), 'error' );
+		} else {
+			$res = Bookings::accept_proposal( $a, $pid );
+			wc_add_notice( is_wp_error( $res ) ? $res->get_error_message() : __( 'Perfetto, la nuova data è confermata!', 'photo-booking' ), is_wp_error( $res ) ? 'error' : 'success' );
+		}
+		wp_safe_redirect( self::booking_url( $a ? $a : Appointment::get( $id ) ) );
+		exit;
+	}
 
 	public static function handle_post() {
 		if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) || empty( $_POST['pb_account_action'] ) ) {

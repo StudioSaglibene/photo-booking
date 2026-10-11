@@ -71,11 +71,13 @@ if ( isset( $extra['accepted'] ) && $sent_to_admin ) {
 
 // Proposals list.
 if ( 'proposal' === $key && $appointment ) {
-	echo '<ul>';
+	echo '<table cellpadding="0" cellspacing="0" style="margin:8px 0 20px;width:100%;">';
 	foreach ( $appointment->proposals( 'open' ) as $p ) {
-		echo '<li><strong>' . esc_html( ucfirst( Time::format_datetime( $p['start_at'] ) ) ) . '</strong></li>';
+		$when = ucfirst( Time::format_date( $p['start_at'] ) ) . ' · ' . Time::format_time( $p['start_at'] ) . ' – ' . Time::format_time( $p['end_at'] );
+		echo '<tr><td style="padding:10px 0;border-bottom:1px solid #e6dfd6;font-size:15px;">' . esc_html( $when ) . '</td><td style="padding:10px 0;border-bottom:1px solid #e6dfd6;text-align:right;white-space:nowrap;"><a href="' . esc_url( \PhotoBooking\Account::accept_link( $appointment->id, $p['id'] ) ) . '" style="display:inline-block;padding:10px 18px;background:#141414;border:1px solid #141414;color:#fffefb;text-decoration:none;font-weight:500;font-family:Helvetica,Arial,sans-serif;font-size:13px;">' . esc_html__( 'Scelgo questa data', 'photo-booking' ) . '</a></td></tr>';
 	}
-	echo '</ul>';
+	echo '</table>';
+	echo '<p style="font-size:13px;color:#7b6d64;">' . esc_html__( 'Cliccando su una data la confermi subito (ti verrà chiesto di accedere alla tua area personale se non lo sei già). Se nessuna data va bene, dalla tua area personale puoi rifiutare la proposta.', 'photo-booking' ) . '</p>';
 }
 
 // Credit issued.

@@ -74,6 +74,8 @@
 				state.when = state.whenShort = state.whenLong = '';
 			}
 			fill('service', btn.getAttribute('data-name'));
+			var intro = $(form, '[data-fill="excerpt"]');
+			if (intro) { intro.textContent = btn.getAttribute('data-excerpt') || ''; intro.hidden = !intro.textContent; }
 			$$(form, '.pb-tiers').forEach(function (g) { g.hidden = g.getAttribute('data-for') !== btn.getAttribute('data-id'); });
 			go(hasTiers() ? 2 : 3);
 		}
@@ -215,6 +217,8 @@
 			state.service = btn;
 			input.product.value = data.product;
 			fill('service', btn.getAttribute('data-name'));
+			var intro2 = $(form, '[data-fill="excerpt"]');
+			if (intro2) { intro2.textContent = btn.getAttribute('data-excerpt') || ''; intro2.hidden = !intro2.textContent; }
 			$$(form, '.pb-tiers').forEach(function (g) { g.hidden = g.getAttribute('data-for') !== data.product; });
 			var tier = data.tier && $(form, '.pb-tiers[data-for="' + data.product + '"] .pb-tier[data-key="' + data.tier + '"]');
 			selectTier(tier || null);

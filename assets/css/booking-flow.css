@@ -227,3 +227,10 @@ body.pb-booking-page #header .top-menu > li > a span { font-family: "Adelle sans
 	.pb-mode em { display: block; margin: 4px 0 0; }
 }
 @media (max-width: 767px) { body.pb-booking-page #header:not(.sticky-values) a.logo.sticky-logo img { width: 140px !important; max-width: 140px !important; height: auto !important; } }
+
+/* Robustezza su telefono: niente elementi invisibili se le animazioni sono disattivate (iOS "Riduci movimento") e niente aspect-ratio non supportato */
+.pb-flow .pb-service, .pb-flow .pb-tier { opacity: 1; transform: none; animation-fill-mode: backwards; }
+@media (prefers-reduced-motion: reduce) { .pb-flow .pb-service, .pb-flow .pb-tier, .pb-extras, .pb-flow-step.is-entering .pb-flow-wrap > * { animation: none !important; opacity: 1 !important; transform: none !important; } }
+@supports not (aspect-ratio: 3 / 4) { .pb-flow .pb-service { height: 0; padding-bottom: 133.33%; } .pb-flow .pb-service .pb-service-img, .pb-flow .pb-service .pb-service-overlay { position: absolute; } }
+.pb-tiers, .pb-services { overflow: visible; }
+.pb-service-intro { margin: -28px 0 40px !important; max-width: 640px; }

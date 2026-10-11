@@ -52,6 +52,7 @@ $fmt         = static function ( $v ) {
 						data-deposit="<?php echo esc_attr( $p['deposit'] ); ?>"
 						data-first="<?php echo esc_attr( $p['first'] ); ?>"
 						data-tiers="<?php echo esc_attr( count( $p['tiers'] ) ); ?>"
+						data-excerpt="<?php echo esc_attr( wp_strip_all_tags( $p['excerpt'] ) ); ?>"
 						<?php disabled( $soldout ); ?>>
 						<?php if ( $p['image'] ) : ?>
 							<img class="pb-service-img" src="<?php echo esc_url( $p['image'] ); ?>" alt="<?php echo esc_attr( $p['name'] ); ?>" loading="lazy">
@@ -78,6 +79,7 @@ $fmt         = static function ( $v ) {
 			<button type="button" class="pb-backlink" data-go="1"><span aria-hidden="true">‹</span> <span data-fill="service"></span></button>
 			<p class="pb-eyebrow"><?php echo esc_html( sprintf( /* translators: 1: step 2: total */ __( 'Step %1$d di %2$d', 'photo-booking' ), 2, $total_steps ) ); ?></p>
 			<h2 class="pb-title"><?php esc_html_e( 'Scegli il pacchetto.', 'photo-booking' ); ?></h2>
+			<p class="pb-lead pb-service-intro" data-fill="excerpt" hidden></p>
 
 			<?php foreach ( $packages as $p ) : ?>
 				<?php

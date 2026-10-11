@@ -51,7 +51,7 @@ class Emails {
 				'title'   => 'Prenotazione – proposta di nuova data',
 				'subject' => 'Ti proponiamo una nuova data per la tua sessione',
 				'heading' => 'Scegli la nuova data',
-				'intro'   => "Ciao {customer_name},\nl'orario che avevi scelto per {package} non è disponibile. Ti proponiamo queste alternative: scegli quella che preferisci dalla tua area privata entro {expires}.\nSe nessuna va bene puoi chiedere il rimborso o un credito.",
+				'intro'   => "Ciao {customer_name},\nl'orario che avevi scelto per {package} non è disponibile. Ti proponiamo queste alternative: clicca sulla data che preferisci entro {expires}.\nSe nessuna va bene puoi rifiutare la proposta dalla tua area privata.",
 				'button'  => 'appointment',
 			),
 			'proposal_expired'   => array(

@@ -35,6 +35,9 @@ class Booking_Form {
 			wp_safe_redirect( Settings::booking_page_url( $args ), 301 );
 			exit;
 		}
+		if ( is_checkout() || is_account_page() ) {
+			return; // never touch the payment and account pages
+		}
 		if ( is_shop() || is_product_taxonomy() || is_cart() || is_post_type_archive( 'product' ) ) {
 			wp_safe_redirect( Settings::booking_page_url(), 301 );
 			exit;
