@@ -2,6 +2,6 @@
 # Deploy automatico cPanel (Git Version Control): copia il plugin nella cartella di WordPress a ogni "Deploy HEAD commit".
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/pkvivian/public_html/wp-content/plugins/photo-booking
+    - export DEPLOYPATH=/home2/pkvivian/public_html/wp-content/plugins/photo-booking
     - /bin/mkdir -p $DEPLOYPATH
     - /usr/bin/rsync -a --delete --exclude '.git' --exclude '.cpanel.yml' ./ $DEPLOYPATH/
