@@ -75,23 +75,23 @@ class Booking_Form {
 	}
 
 	public static function register_assets() {
-		wp_register_style( 'pb-front', PB_URL . 'assets/css/booking.css', array(), PB_VERSION );
+		wp_register_style( 'pb-front', PB_URL . 'assets/css/booking.css', array(), pb_asset_ver( 'assets/css/booking.css' ) );
 		wp_add_inline_style( 'pb-front', '.pb-booking,.pb-account{--pb-accent:' . ( sanitize_hex_color( Settings::get( 'accent_color' ) ) ?: '#8a6d4b' ) . ';}' );
-		wp_register_script( 'pb-picker', PB_URL . 'assets/js/slot-picker.js', array(), PB_VERSION, true );
-		wp_register_script( 'pb-booking', PB_URL . 'assets/js/booking.js', array( 'pb-picker' ), PB_VERSION, true );
-		wp_register_style( 'pb-flow-fonts', PB_URL . 'assets/css/fonts.css', array(), PB_VERSION );
+		wp_register_script( 'pb-picker', PB_URL . 'assets/js/slot-picker.js', array(), pb_asset_ver( 'assets/js/slot-picker.js' ), true );
+		wp_register_script( 'pb-booking', PB_URL . 'assets/js/booking.js', array( 'pb-picker' ), pb_asset_ver( 'assets/js/booking.js' ), true );
+		wp_register_style( 'pb-flow-fonts', PB_URL . 'assets/css/fonts.css', array(), pb_asset_ver( 'assets/css/fonts.css' ) );
 		// Elementor would load "Italiana" from Google: we serve it locally (privacy, no external calls).
 		add_filter( 'elementor/frontend/print_google_fonts', '__return_false' );
 		wp_enqueue_style( 'pb-flow-fonts' );
-		wp_register_style( 'pb-flow', PB_URL . 'assets/css/booking-flow.css', array( 'pb-flow-fonts' ), PB_VERSION );
-		wp_register_style( 'pb-toast', PB_URL . 'assets/css/toast.css', array(), PB_VERSION );
-		wp_register_script( 'pb-toast', PB_URL . 'assets/js/toast.js', array( 'jquery' ), PB_VERSION, true );
-		wp_register_script( 'pb-flow', PB_URL . 'assets/js/booking-flow.js', array( 'pb-picker', 'pb-toast' ), PB_VERSION, true );
+		wp_register_style( 'pb-flow', PB_URL . 'assets/css/booking-flow.css', array( 'pb-flow-fonts' ), pb_asset_ver( 'assets/css/booking-flow.css' ) );
+		wp_register_style( 'pb-toast', PB_URL . 'assets/css/toast.css', array(), pb_asset_ver( 'assets/css/toast.css' ) );
+		wp_register_script( 'pb-toast', PB_URL . 'assets/js/toast.js', array( 'jquery' ), pb_asset_ver( 'assets/js/toast.js' ), true );
+		wp_register_script( 'pb-flow', PB_URL . 'assets/js/booking-flow.js', array( 'pb-picker', 'pb-toast' ), pb_asset_ver( 'assets/js/booking-flow.js' ), true );
 		if ( self::is_booking_page() || ( function_exists( 'is_account_page' ) && ( is_account_page() || is_checkout() ) ) ) {
 			wp_enqueue_style( 'pb-toast' );
 			wp_enqueue_script( 'pb-toast' );
 		}
-		wp_enqueue_style( 'pb-header', PB_URL . 'assets/css/header.css', array(), PB_VERSION );
+		wp_enqueue_style( 'pb-header', PB_URL . 'assets/css/header.css', array(), pb_asset_ver( 'assets/css/header.css' ) );
 		wp_localize_script( 'pb-picker', 'PB', self::js_config() );
 		if ( function_exists( 'is_account_page' ) && is_account_page() ) {
 			wp_enqueue_style( 'pb-front' );

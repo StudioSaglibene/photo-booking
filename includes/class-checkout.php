@@ -240,7 +240,7 @@ class Checkout {
 		if ( ! self::is_checkout_form() || ! Cart::cart_has_booking() ) {
 			return;
 		}
-		wp_enqueue_style( 'pb-checkout', PB_URL . 'assets/css/checkout.css', array( 'pb-flow-fonts' ), PB_VERSION );
+		wp_enqueue_style( 'pb-checkout', PB_URL . 'assets/css/checkout.css', array( 'pb-flow-fonts' ), pb_asset_ver( 'assets/css/checkout.css' ) );
 		add_filter(
 			'body_class',
 			static function ( $classes ) {

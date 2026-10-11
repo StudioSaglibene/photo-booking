@@ -15,7 +15,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'PB_VERSION', '1.0.0' );
+define( 'PB_VERSION', '1.1.0' );
 define( 'PB_DB_VERSION', '2' );
 define( 'PB_FILE', __FILE__ );
 define( 'PB_DIR', plugin_dir_path( __FILE__ ) );
@@ -92,6 +92,12 @@ function pb_get_template( $template, $args = array() ) {
  * @param array  $args     Variables.
  * @return string
  */
+/** Cache busting: version = plugin version + file modification time, so every release reloads CSS/JS on every device. */
+function pb_asset_ver( $relative ) {
+	$file = PB_DIR . ltrim( $relative, '/' );
+	return PB_VERSION . '.' . ( file_exists( $file ) ? filemtime( $file ) : 0 );
+}
+
 function pb_get_template_html( $template, $args = array() ) {
 	ob_start();
 	pb_get_template( $template, $args );

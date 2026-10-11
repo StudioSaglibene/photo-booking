@@ -27,7 +27,7 @@ class Account {
 		if ( function_exists( 'is_account_page' ) && is_account_page() && is_user_logged_in() ) {
 			wp_enqueue_style( 'pb-flow-fonts' );
 			wp_enqueue_style( 'pb-front' );
-			wp_enqueue_style( 'pb-account', PB_URL . 'assets/css/account.css', array( 'pb-front' ), PB_VERSION );
+			wp_enqueue_style( 'pb-account', PB_URL . 'assets/css/account.css', array( 'pb-front' ), pb_asset_ver( 'assets/css/account.css' ) );
 			add_filter(
 				'body_class',
 				static function ( $classes ) {
@@ -39,7 +39,7 @@ class Account {
 		if ( ! self::is_login_screen() ) {
 			return;
 		}
-		wp_enqueue_style( 'pb-login', PB_URL . 'assets/css/login.css', array( 'pb-flow-fonts' ), PB_VERSION );
+		wp_enqueue_style( 'pb-login', PB_URL . 'assets/css/login.css', array( 'pb-flow-fonts' ), pb_asset_ver( 'assets/css/login.css' ) );
 		add_filter(
 			'body_class',
 			static function ( $classes ) {

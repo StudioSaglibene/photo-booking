@@ -79,8 +79,8 @@ class Admin {
 			return;
 		}
 		$page = sanitize_key( $_GET['page'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification
-		wp_enqueue_style( 'pb-admin', PB_URL . 'assets/css/admin.css', array(), PB_VERSION );
-		wp_enqueue_script( 'pb-admin', PB_URL . 'assets/js/admin.js', array(), PB_VERSION, true );
+		wp_enqueue_style( 'pb-admin', PB_URL . 'assets/css/admin.css', array(), pb_asset_ver( 'assets/css/admin.css' ) );
+		wp_enqueue_script( 'pb-admin', PB_URL . 'assets/js/admin.js', array(), pb_asset_ver( 'assets/js/admin.js' ), true );
 		wp_localize_script(
 			'pb-admin',
 			'PBAdmin',
@@ -102,7 +102,7 @@ class Admin {
 			$local = PB_DIR . 'assets/vendor/fullcalendar/index.global.min.js';
 			$src   = file_exists( $local ) ? PB_URL . 'assets/vendor/fullcalendar/index.global.min.js' : Settings::get( 'fullcalendar_src' );
 			wp_enqueue_script( 'fullcalendar', $src, array(), '6.1.15', true );
-			wp_enqueue_script( 'pb-admin-calendar', PB_URL . 'assets/js/admin-calendar.js', array( 'fullcalendar', 'pb-admin' ), PB_VERSION, true );
+			wp_enqueue_script( 'pb-admin-calendar', PB_URL . 'assets/js/admin-calendar.js', array( 'fullcalendar', 'pb-admin' ), pb_asset_ver( 'assets/js/admin-calendar.js' ), true );
 			$hours = Settings::get( 'hours' );
 			$bh    = array();
 			$min   = 24 * 60;
@@ -144,7 +144,7 @@ class Admin {
 			);
 		}
 		if ( 'pb-deliveries' === $page ) {
-			wp_enqueue_script( 'pb-admin-deliveries', PB_URL . 'assets/js/admin-deliveries.js', array( 'pb-admin' ), PB_VERSION, true );
+			wp_enqueue_script( 'pb-admin-deliveries', PB_URL . 'assets/js/admin-deliveries.js', array( 'pb-admin' ), pb_asset_ver( 'assets/js/admin-deliveries.js' ), true );
 		}
 	}
 
