@@ -240,3 +240,8 @@ body.pb-booking-page #header .top-menu > li > a span { font-family: "Adelle sans
 .pb-flow .pb-service::before { content: ""; display: block; padding-top: 133.333%; }
 .pb-flow .pb-service-img, .pb-flow .pb-service-overlay { position: absolute; top: 0; right: 0; bottom: 0; left: 0; }
 .pb-flow-step, .pb-flow-wrap, .pb-services { height: auto !important; min-height: 0; max-height: none !important; overflow: visible; }
+
+/* Il contenitore flex di Elementor calcola male l'altezza della griglia su schermi stretti e il footer copre le ultime card:
+   lo rendiamo un blocco normale e diamo alle card un'altezza esplicita su telefono. */
+.e-con:has(.pb-flow), .elementor-widget-shortcode:has(.pb-flow) { display: block !important; height: auto !important; }
+@media (max-width: 767px) { .pb-flow .pb-service { height: calc((100vw - 60px) / 2 * 1.3333); } .pb-flow .pb-service::before { display: none; } }
