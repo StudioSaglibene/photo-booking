@@ -5,6 +5,8 @@ deployment:
   tasks:
     - export DEPLOYPATH=/home2/pkvivian/public_html/wp-content/plugins/photo-booking
     - /bin/mkdir -p $DEPLOYPATH
+    - /bin/chmod 755 $DEPLOYPATH /home2/pkvivian/public_html/wp-content/plugins
+    - /bin/umask 022
     - /usr/bin/rsync -a --delete --exclude '.git' --exclude '.cpanel.yml' --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r ./ $DEPLOYPATH/
     - /usr/bin/find $DEPLOYPATH -type d -exec /bin/chmod 755 {} +
     - /usr/bin/find $DEPLOYPATH -type f -exec /bin/chmod 644 {} +
