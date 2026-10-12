@@ -31,6 +31,9 @@ class Install {
 			self::upgrade_data();
 			update_option( 'pb_version', PB_VERSION, false );
 		}
+		if ( ! get_option( 'pb_stock_images' ) ) {
+			add_action( 'init', array( __CLASS__, 'install_stock_images' ), 20 );
+		}
 	}
 
 	/** One-off data fixes shipped with a release (so that a git deploy is enough, without touching the database by hand). */
@@ -52,7 +55,6 @@ class Install {
 		if ( false !== strpos( $footer, 'Costanzo' ) || false !== strpos( $footer, 'Chiovaro' ) ) {
 			update_option( 'woocommerce_email_footer_text', 'Viviana Saglibene Fotografia · ' . $addr . ' · P. IVA 06942900827 · {site_url}' );
 		}
-		add_action( 'init', array( __CLASS__, 'install_stock_images' ), 20 );
 		if ( 'Via Chiovaro 107' === get_option( 'woocommerce_store_address' ) ) {
 			update_option( 'woocommerce_store_address', 'Via Mariagrazia Costanzo 1' );
 			update_option( 'woocommerce_store_postcode', '90040' );
@@ -63,9 +65,19 @@ class Install {
 	 * Installs the stock photos shipped in assets/stock as package images and Prenota hero (once).
 	 */
 	public static function install_stock_images() {
-		if ( get_option( 'pb_stock_images' ) ) {
+		if ( get_option( 'pb_stock_images' ) || ( defined( 'DOING_AJAX' ) && DOING_AJAX ) || ( defined( 'DOING_CRON' ) && DOING_CRON ) ) {
 			return;
 		}
+		update_option( 'pb_stock_images', array( 'started' => time() ), false );
+		try {
+			self::do_install_stock_images();
+		} catch ( \Throwable $e ) {
+			update_option( 'pb_stock_images', array( 'error' => $e->getMessage() ), false );
+		}
+	}
+
+	private static function do_install_stock_images() {
+		wp_raise_memory_limit( 'image' );
 		require_once ABSPATH . 'wp-admin/includes/file.php';
 		require_once ABSPATH . 'wp-admin/includes/media.php';
 		require_once ABSPATH . 'wp-admin/includes/image.php';
