@@ -149,6 +149,7 @@ class Install {
 	public static function apply_legal_pages() {
 		delete_option( 'pb_legal_pending' );
 		self::update_legal_page( 'condizioni-di-vendita', 'Termini e condizioni di vendita' );
+		self::update_legal_page( 'cookie-policy' );
 	}
 
 	/** Replaces the content of a legal page with the version shipped in legal/<slug>.html (shared with production). */

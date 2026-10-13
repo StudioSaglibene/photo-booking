@@ -98,6 +98,13 @@ $cors = wp_json_encode(
 			</ol>
 		</details>
 
+		<h2><?php esc_html_e( 'Cookie banner', 'photo-booking' ); ?></h2>
+		<p class="description"><?php esc_html_e( 'Il banner è sempre attivo: i cookie tecnici non richiedono consenso, i codici qui sotto partono solo dopo che il visitatore ha accettato la relativa categoria. Lascia vuoto se non usi statistiche o marketing.', 'photo-booking' ); ?></p>
+		<table class="form-table">
+			<tr><th><?php esc_html_e( 'Codice statistiche', 'photo-booking' ); ?></th><td><textarea name="cookie_scripts_stats" rows="5" class="large-text code" <?php disabled( ! current_user_can( 'unfiltered_html' ) ); ?>><?php echo esc_textarea( $s['cookie_scripts_stats'] ); ?></textarea><p class="description"><?php esc_html_e( 'Es. il tag di Google Analytics 4, incollato così com\'è (con i tag <script>).', 'photo-booking' ); ?></p></td></tr>
+			<tr><th><?php esc_html_e( 'Codice marketing', 'photo-booking' ); ?></th><td><textarea name="cookie_scripts_marketing" rows="5" class="large-text code" <?php disabled( ! current_user_can( 'unfiltered_html' ) ); ?>><?php echo esc_textarea( $s['cookie_scripts_marketing'] ); ?></textarea><p class="description"><?php esc_html_e( 'Es. il Pixel di Meta.', 'photo-booking' ); ?></p></td></tr>
+		</table>
+
 		<h2><?php esc_html_e( 'Avanzate', 'photo-booking' ); ?></h2>
 		<table class="form-table">
 			<tr><th><?php esc_html_e( 'URL FullCalendar', 'photo-booking' ); ?></th><td><input type="url" class="large-text" name="fullcalendar_src" value="<?php echo esc_attr( $s['fullcalendar_src'] ); ?>"><p class="description"><?php esc_html_e( 'Se presente, viene usato il file locale assets/vendor/fullcalendar/index.global.min.js.', 'photo-booking' ); ?></p></td></tr>

@@ -598,6 +598,8 @@ class Admin {
 			'business_email'         => sanitize_email( $p['business_email'] ?? '' ),
 			'business_phone'         => sanitize_text_field( $p['business_phone'] ?? '' ),
 			'accent_color'           => sanitize_hex_color( $p['accent_color'] ?? '' ) ?: '#8a6d4b',
+			'cookie_scripts_stats'   => current_user_can( 'unfiltered_html' ) ? (string) ( $p['cookie_scripts_stats'] ?? '' ) : Settings::get( 'cookie_scripts_stats' ),
+			'cookie_scripts_marketing' => current_user_can( 'unfiltered_html' ) ? (string) ( $p['cookie_scripts_marketing'] ?? '' ) : Settings::get( 'cookie_scripts_marketing' ),
 			'hours'                  => $hours,
 			'slot_interval'          => $int( 'slot_interval' ),
 			'min_notice_hours'       => $int( 'min_notice_hours' ),

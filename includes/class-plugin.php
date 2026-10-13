@@ -31,6 +31,7 @@ class Plugin {
 		Rest::init();
 		Cron::init();
 		Deliveries::init();
+		Cookies::init();
 		Cli::register();
 
 		if ( is_admin() ) {

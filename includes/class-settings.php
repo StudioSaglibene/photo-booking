@@ -60,6 +60,8 @@ class Settings {
 			'business_phone'          => '',
 			// Appearance.
 			'accent_color'            => '#8a6d4b',
+			'cookie_scripts_stats'    => '',
+			'cookie_scripts_marketing' => '',
 			'fullcalendar_src'        => 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js',
 		);
 	}
