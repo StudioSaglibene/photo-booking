@@ -34,13 +34,16 @@ class Install {
 		if ( ! get_option( 'pb_stock_images' ) ) {
 			add_action( 'init', array( __CLASS__, 'install_stock_images' ), 20 );
 		}
+		if ( get_option( 'pb_legal_pending' ) ) {
+			add_action( 'init', array( __CLASS__, 'apply_legal_pages' ), 20 );
+		}
 	}
 
 	/** One-off data fixes shipped with a release (so that a git deploy is enough, without touching the database by hand). */
 	private static function upgrade_data() {
-		$addr = 'Via Mariagrazia Costanzo 1, 90040 Carini (PA)';
+		$addr = 'Via Mariagrazia Costanzo 1, 90040 Capaci (PA)';
 		$s    = Settings::all();
-		$old  = array( '', 'Via Chiovaro 107, 90044 Carini (PA)', 'Via Mariagrazia Costanzo, Carini (PA)', 'Via Mariagrazia Costanzo 1, 90044 Carini (PA)' );
+		$old  = array( '', 'Via Chiovaro 107, 90044 Carini (PA)', 'Via Mariagrazia Costanzo, Carini (PA)', 'Via Mariagrazia Costanzo 1, 90044 Carini (PA)', 'Via Mariagrazia Costanzo 1, 90040 Carini (PA)' );
 		$upd  = array();
 		if ( in_array( $s['studio_address'], $old, true ) ) {
 			$upd['studio_address'] = $addr;
@@ -55,10 +58,12 @@ class Install {
 		if ( false !== strpos( $footer, 'Costanzo' ) || false !== strpos( $footer, 'Chiovaro' ) ) {
 			update_option( 'woocommerce_email_footer_text', 'Viviana Saglibene Fotografia · ' . $addr . ' · P. IVA 06942900827 · {site_url}' );
 		}
-		if ( 'Via Chiovaro 107' === get_option( 'woocommerce_store_address' ) ) {
+		if ( in_array( get_option( 'woocommerce_store_address' ), array( 'Via Chiovaro 107', 'Via Mariagrazia Costanzo 1' ), true ) ) {
 			update_option( 'woocommerce_store_address', 'Via Mariagrazia Costanzo 1' );
 			update_option( 'woocommerce_store_postcode', '90040' );
+			update_option( 'woocommerce_store_city', 'Capaci' );
 		}
+		update_option( 'pb_legal_pending', PB_VERSION, false ); // applied on init: wp_update_post is not available this early.
 	}
 
 	/**
@@ -138,6 +143,26 @@ class Install {
 			}
 		}
 		update_option( 'pb_stock_images', $ids, false );
+	}
+
+	/** Pages shipped in legal/ are re-published after each release that changes them. */
+	public static function apply_legal_pages() {
+		delete_option( 'pb_legal_pending' );
+		self::update_legal_page( 'condizioni-di-vendita', 'Termini e condizioni di vendita' );
+	}
+
+	/** Replaces the content of a legal page with the version shipped in legal/<slug>.html (shared with production). */
+	private static function update_legal_page( $slug, $title = '' ) {
+		$file = PB_DIR . 'legal/' . $slug . '.html';
+		$page = get_page_by_path( $slug );
+		if ( ! $page || ! file_exists( $file ) ) {
+			return;
+		}
+		$args = array( 'ID' => $page->ID, 'post_content' => file_get_contents( $file ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+		if ( $title ) {
+			$args['post_title'] = $title;
+		}
+		wp_update_post( wp_slash( $args ) );
 	}
 
 	public static function table( $name ) {
