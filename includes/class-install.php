@@ -37,6 +37,9 @@ class Install {
 		if ( get_option( 'pb_legal_pending' ) ) {
 			add_action( 'init', array( __CLASS__, 'apply_legal_pages' ), 20 );
 		}
+		if ( get_option( 'pb_seo_pending' ) ) {
+			add_action( 'init', array( __CLASS__, 'apply_seo' ), 21 );
+		}
 	}
 
 	/** One-off data fixes shipped with a release (so that a git deploy is enough, without touching the database by hand). */
@@ -64,6 +67,7 @@ class Install {
 			update_option( 'woocommerce_store_city', 'Capaci' );
 		}
 		update_option( 'pb_legal_pending', PB_VERSION, false ); // applied on init: wp_update_post is not available this early.
+		update_option( 'pb_seo_pending', PB_VERSION, false );
 	}
 
 	/**
@@ -143,6 +147,14 @@ class Install {
 			}
 		}
 		update_option( 'pb_stock_images', $ids, false );
+	}
+
+	/** Titles, descriptions, noindex and schema settings shipped with the plugin (see Seo). */
+	public static function apply_seo() {
+		delete_option( 'pb_seo_pending' );
+		if ( class_exists( 'WPSEO_Options' ) ) {
+			Seo::apply();
+		}
 	}
 
 	/** Pages shipped in legal/ are re-published after each release that changes them. */

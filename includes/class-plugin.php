@@ -32,6 +32,7 @@ class Plugin {
 		Cron::init();
 		Deliveries::init();
 		Cookies::init();
+		Seo::init();
 		Cli::register();
 
 		if ( is_admin() ) {
