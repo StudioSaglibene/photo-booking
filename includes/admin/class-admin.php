@@ -194,6 +194,15 @@ class Admin {
 		foreach ( array( 'wp-logo', 'updates', 'comments', 'new-content', 'customize', 'elementor_edit_page', 'wpforms-menu', 'maintenance', 'themes', 'site-name' ) as $id ) {
 			$bar->remove_node( $id );
 		}
+		// The site-name menu is gone: keep a plain "Visita il sito" / "Prenotazioni" switch in the black bar.
+		$bar->add_node(
+			array(
+				'id'    => 'pb-site-link',
+				'title' => is_admin() ? '<span class="ab-icon dashicons dashicons-admin-home" style="margin-top:2px"></span>' . esc_html__( 'Visita il sito', 'photo-booking' ) : '<span class="ab-icon dashicons dashicons-calendar-alt" style="margin-top:2px"></span>' . esc_html__( 'Prenotazioni', 'photo-booking' ),
+				'href'  => is_admin() ? home_url( '/' ) : admin_url( 'admin.php?page=pb-calendar' ),
+				'meta'  => array( 'title' => is_admin() ? __( 'Vai al sito pubblico', 'photo-booking' ) : __( 'Torna al pannello prenotazioni', 'photo-booking' ) ),
+			)
+		);
 	}
 
 	/** The dashboard is hidden: land on the calendar instead. */

@@ -37,6 +37,9 @@ class Plugin {
 
 		if ( is_admin() ) {
 			Admin\Admin::init();
+		} else {
+			// Same trimmed black bar for the studio user on the public site, with the way back to the bookings panel.
+			add_action( 'admin_bar_menu', array( Admin\Admin::class, 'trim_admin_bar' ), 999 );
 		}
 
 		add_action( 'init', array( $this, 'maybe_flush' ), 99 );
