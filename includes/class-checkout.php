@@ -201,7 +201,20 @@ class Checkout {
 
 	/** WooCommerce strings on the checkout, in the voice of the booking page. */
 	public static function texts( $translated, $text, $domain ) {
-		if ( 'woocommerce' !== $domain || ! self::is_checkout_form() ) {
+		if ( ! self::is_checkout_form() ) {
+			return $translated;
+		}
+		// Stripe gateway strings that ship untranslated.
+		if ( 'woocommerce-gateway-stripe' === $domain ) {
+			if ( 'Save payment information to my account for future purchases.' === $text ) {
+				return __( 'Salva la carta nel mio account per le prossime prenotazioni.', 'photo-booking' );
+			}
+			if ( 'Use a new payment method' === $text ) {
+				return __( 'Usa una nuova carta', 'photo-booking' );
+			}
+			return $translated;
+		}
+		if ( 'woocommerce' !== $domain ) {
 			return $translated;
 		}
 		switch ( $text ) {

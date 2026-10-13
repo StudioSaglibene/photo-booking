@@ -151,3 +151,15 @@ body.pb-checkout-page form.checkout .select2-container--default .select2-selecti
 body.pb-checkout-page form.checkout .woocommerce-terms-and-conditions-wrapper .woocommerce-form__label-for-checkbox { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; letter-spacing: 0; text-transform: none; font-family: var(--pb-sans); font-weight: 300; color: var(--pb-ink); }
 body.pb-checkout-page form.checkout .woocommerce-terms-and-conditions-wrapper .woocommerce-form__label-for-checkbox input { margin-top: 3px; accent-color: var(--pb-dark); }
 body.pb-checkout-page form.checkout .woocommerce-terms-and-conditions { background: var(--pb-sand); padding: 16px; max-height: 180px; overflow: auto; font-size: 12px; margin-bottom: 12px; }
+
+/* Theme rule ".woocommerce-page #payment #place_order { padding: 0 30px }" and "button[type=submit] { height: 40px; line-height: 42px }" squash the pay button: pin its box with higher specificity. */
+body.pb-checkout-page.woocommerce-page #payment #place_order, body.pb-checkout-page form.checkout #payment #place_order, body.pb-checkout-page form.checkout #place_order { box-sizing: border-box; display: flex !important; align-items: center; justify-content: center; width: 100%; height: auto !important; min-height: 50px; padding: 15px 24px !important; margin: 18px 0 0; line-height: 1.2 !important; white-space: normal; }
+/* Saved cards (Stripe): radio and label on one line, same boxes as the gateway list. */
+body.pb-checkout-page form.checkout #payment div.payment_box .woocommerce-SavedPaymentMethods { margin: 0 0 12px; padding: 0; list-style: none; }
+body.pb-checkout-page form.checkout #payment div.payment_box .woocommerce-SavedPaymentMethods li { display: flex; align-items: center; gap: 12px; padding: 13px 14px; margin: 0 0 10px; border: 1px solid #e6e0d9; background: #fffefb; font-size: 13px; }
+body.pb-checkout-page form.checkout #payment div.payment_box .woocommerce-SavedPaymentMethods li input[type="radio"] { flex: 0 0 auto; width: 16px; height: 16px; margin: 0; accent-color: #141414; }
+body.pb-checkout-page form.checkout #payment div.payment_box .woocommerce-SavedPaymentMethods li label { display: block; flex: 1 1 auto; margin: 0; padding: 0; cursor: pointer; line-height: 1.4; }
+body.pb-checkout-page form.checkout #payment div.payment_box .woocommerce-SavedPaymentMethods li.woocommerce-SavedPaymentMethods-new { flex-wrap: wrap; }
+body.pb-checkout-page form.checkout #payment div.payment_box .woocommerce-SavedPaymentMethods li.woocommerce-SavedPaymentMethods-new .woocommerce-SavedPaymentMethods-new-wrap, body.pb-checkout-page form.checkout #payment div.payment_box .wc-stripe-new-payment-method-container { flex: 1 1 100%; margin-top: 10px; }
+/* Any other submit button in the checkout and the account area: never the theme's fixed 40px box. */
+body.pb-checkout-page form.checkout button[type="submit"]:not(#place_order), body.pb-account-page .woocommerce button[type="submit"], body.pb-account-page .woocommerce input[type="submit"] { height: auto; min-height: 44px; line-height: 1.2; padding: 12px 22px; }
