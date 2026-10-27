@@ -67,6 +67,10 @@ class Install {
 			update_option( 'woocommerce_store_city', 'Capaci' );
 		}
 		update_option( 'pb_legal_pending', PB_VERSION, false ); // applied on init: wp_update_post is not available this early.
+		self::add_studio_role(); // capabilities may change between releases.
+		if ( 'customer' !== get_option( 'default_role' ) ) {
+			update_option( 'default_role', 'customer' ); // users added from the panel are customers of the studio.
+		}
 		update_option( 'pb_seo_pending', PB_VERSION, false );
 	}
 
@@ -342,8 +346,8 @@ class Install {
 				'upload_files'         => true,
 				'list_users'           => true,
 				'edit_users'           => true,
-				'create_users'         => false,
-				'delete_users'         => false,
+				'create_users'         => true,
+				'delete_users'         => true,
 				'promote_users'        => false,
 				'edit_posts'           => false,
 				'edit_pages'           => false,

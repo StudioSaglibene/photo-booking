@@ -30,6 +30,15 @@ $colors = Appointment::status_colors();
 			<div id="pb-cal-fallback" hidden class="notice notice-error inline"><p><?php esc_html_e( 'Impossibile caricare il calendario (FullCalendar). Controlla la connessione o l\'URL in Impostazioni → Avanzate. Puoi comunque usare l\'Elenco.', 'photo-booking' ); ?></p></div>
 		</div>
 		<aside class="pb-cal-side">
+			<?php if ( isset( $maintenance ) && null !== $maintenance ) : ?>
+				<div class="pb-box pb-maintenance <?php echo $maintenance ? 'is-on' : ''; ?>">
+					<strong><?php echo $maintenance ? esc_html__( 'Sito in manutenzione', 'photo-booking' ) : esc_html__( 'Sito online', 'photo-booking' ); ?></strong>
+					<?php Admin::form_open( 'maintenance', 'class="pb-inline-form"' ); ?>
+						<input type="hidden" name="state" value="<?php echo $maintenance ? '0' : '1'; ?>">
+						<button class="button button-small" onclick="return confirm('<?php echo esc_js( $maintenance ? __( 'Rimettere il sito online per tutti?', 'photo-booking' ) : __( 'Mostrare ai visitatori la pagina "sito in manutenzione"? Tu continuerai a vedere il sito normalmente.', 'photo-booking' ) ); ?>')"><?php echo $maintenance ? esc_html__( 'Rimetti online', 'photo-booking' ) : esc_html__( 'Metti in manutenzione', 'photo-booking' ); ?></button>
+					</form>
+				</div>
+			<?php endif; ?>
 			<h2><?php esc_html_e( 'Da gestire', 'photo-booking' ); ?> <span class="count">(<?php echo count( $pending ); ?>)</span></h2>
 			<?php if ( ! $pending ) : ?>
 				<p class="description"><?php esc_html_e( 'Nessuna richiesta in attesa. 🎉', 'photo-booking' ); ?></p>

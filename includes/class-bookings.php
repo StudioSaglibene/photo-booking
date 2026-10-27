@@ -108,7 +108,11 @@ class Bookings {
 		Payments::recalc( $appt );
 
 		if ( 'balance' === $type ) {
-			$appt->log( 'payment', sprintf( 'Saldo online ricevuto: %s (ordine #%d)', wc_format_decimal( $order->get_total(), 2 ), $order->get_id() ) );
+			$was_unpaid = (float) $appt->paid - (float) $order->get_total() <= 0.009;
+			$appt->log( 'payment', sprintf( '%s online ricevuto: %s (ordine #%d)', $was_unpaid && $appt->balance_due() > 0 ? 'Acconto' : 'Saldo', wc_format_decimal( $order->get_total(), 2 ), $order->get_id() ) );
+			if ( $was_unpaid && $appt->hold_expires_at ) {
+				$appt->update( array( 'hold_expires_at' => null ) ); // Payment deadline met.
+			}
 			Payments::sync_main_order_status( $appt );
 			Emails::send( 'balance_received', $appt, array( 'amount' => (float) $order->get_total(), 'method' => $order->get_payment_method_title() ) );
 			Emails::send( 'admin_balance_paid', $appt, array( 'amount' => (float) $order->get_total() ) );
@@ -184,6 +188,7 @@ class Bookings {
 						'deposit'        => $cfg['deposit'],
 						'source'         => 'admin',
 						'customer_notes' => $data['notes'] ?? '',
+						'hold_expires_at' => 'none' === ( $data['payment'] ?? 'none' ) && (int) Settings::get( 'manual_payment_days' ) > 0 ? Time::now()->modify( '+' . (int) Settings::get( 'manual_payment_days' ) . ' days' )->setTime( 23, 59, 0 )->format( Time::DB ) : null,
 						'meta'           => array( 'product_name' => $cfg['name'] ),
 					)
 				);
@@ -605,6 +610,101 @@ class Bookings {
 				$a->log( 'expired', 'Blocco scaduto senza pagamento' );
 			}
 		}
+	}
+
+	/**
+	 * Bookings entered by the studio (or confirmed) that still have nothing paid and a payment deadline:
+	 * reminder 24 hours before, then expiry with the slot freed.
+	 */
+	public static function payment_deadlines() {
+		global $wpdb;
+		$t    = Install::table( 'appointments' );
+		$now  = Time::now();
+		$rows = $wpdb->get_col( $wpdb->prepare( "SELECT id FROM {$t} WHERE status IN (%s,%s) AND paid <= 0 AND hold_expires_at IS NOT NULL", Appointment::PENDING, Appointment::CONFIRMED ) ); // phpcs:ignore
+		foreach ( $rows as $id ) {
+			$a = Appointment::get( $id );
+			if ( ! $a || $a->paid > 0 ) {
+				continue;
+			}
+			$deadline = Time::parse( $a->hold_expires_at );
+			if ( ! $deadline ) {
+				continue;
+			}
+			if ( $deadline <= $now ) {
+				$a->update( array( 'status' => Appointment::EXPIRED, 'hold_expires_at' => null ) );
+				$a->log( 'expired', 'Scadenza del pagamento superata senza acconto: prenotazione scaduta, data liberata' );
+				Emails::send( 'payment_expired', $a, array( 'deadline' => $deadline ) );
+				Emails::send( 'admin_payment_expired', $a, array( 'deadline' => $deadline ) );
+				continue;
+			}
+			if ( ! $a->get_meta( 'deadline_reminder_sent' ) && $deadline->modify( '-24 hours' ) <= $now && (int) $now->format( 'G' ) >= 8 ) {
+				$a->update( array( 'meta' => array( 'deadline_reminder_sent' => $now->format( Time::DB ) ) ) );
+				self::send_payment_request( $a, 'deposit', '', 'payment_reminder' );
+			}
+		}
+	}
+
+	/**
+	 * Email asking for the deposit or the balance, with a payment link.
+	 *
+	 * @param string $what deposit|balance
+	 * @return true|\WP_Error
+	 */
+	public static function send_payment_request( Appointment $appt, $what = 'balance', $message = '', $email_key = 'payment_request' ) {
+		if ( $appt->is_closed() ) {
+			return new \WP_Error( 'pb_status', __( 'La prenotazione è chiusa.', 'photo-booking' ) );
+		}
+		$amount = 'deposit' === $what && $appt->deposit_due() > 0 ? $appt->deposit_due() : $appt->balance_due();
+		if ( $amount <= 0 ) {
+			return new \WP_Error( 'pb_nothing_due', __( 'Non c\'è nulla da pagare.', 'photo-booking' ) );
+		}
+		$order = Payments::balance_order( $appt, $amount );
+		if ( is_wp_error( $order ) ) {
+			return $order;
+		}
+		$extra = array(
+			'amount'  => $amount,
+			'what'    => $what,
+			'pay_url' => $order->get_checkout_payment_url(),
+			'message' => $message,
+		);
+		if ( $appt->hold_expires_at && $appt->paid <= 0 ) {
+			$extra['deadline'] = Time::parse( $appt->hold_expires_at );
+		}
+		$sent = Emails::send( $email_key, $appt, $extra );
+		if ( ! $sent ) {
+			return new \WP_Error( 'pb_email', __( 'Email non inviata (controlla che sia attiva in WooCommerce → Impostazioni → Email).', 'photo-booking' ) );
+		}
+		$appt->log( 'reminder', sprintf( '%s inviato via email: %s (ordine #%d)', 'payment_reminder' === $email_key ? 'Promemoria scadenza' : ( 'deposit' === $what ? 'Sollecito acconto' : 'Sollecito saldo' ), wc_format_decimal( $amount, 2 ), $order->get_id() ) );
+		return true;
+	}
+
+	/** Holds that never saw a payment are pure noise after a few days: remove them for good. */
+	public static function purge_stale( $days = 7 ) {
+		global $wpdb;
+		$t   = Install::table( 'appointments' );
+		$ids = $wpdb->get_col( $wpdb->prepare( "SELECT id FROM {$t} WHERE status IN (%s,%s) AND paid <= 0 AND source <> 'admin' AND created_at < %s", Appointment::PENDING_PAYMENT, Appointment::EXPIRED, Time::now()->modify( '-' . max( 1, (int) $days ) . ' days' )->format( Time::DB ) ) ); // phpcs:ignore
+		foreach ( $ids as $id ) {
+			$a = Appointment::get( $id );
+			if ( $a ) {
+				$a->delete();
+			}
+		}
+		return count( $ids );
+	}
+
+	/** Closed bookings (rejected, cancelled, expired) older than $days: deleted for good, orders stay in WooCommerce. */
+	public static function purge_archive( $days = 30 ) {
+		global $wpdb;
+		$t   = Install::table( 'appointments' );
+		$ids = $wpdb->get_col( $wpdb->prepare( "SELECT id FROM {$t} WHERE status IN (%s,%s,%s) AND updated_at < %s", Appointment::REJECTED, Appointment::CANCELLED, Appointment::EXPIRED, Time::now()->modify( '-' . max( 0, (int) $days ) . ' days' )->format( Time::DB ) ) ); // phpcs:ignore
+		foreach ( $ids as $id ) {
+			$a = Appointment::get( $id );
+			if ( $a ) {
+				$a->delete();
+			}
+		}
+		return count( $ids );
 	}
 
 	public static function expire_proposals() {

@@ -279,12 +279,13 @@ class Account {
 		$back   = self::booking_url( $a );
 
 		switch ( $action ) {
+			case 'pay_deposit':
 			case 'pay_balance':
 				if ( $a->is_closed() ) {
 					wc_add_notice( __( 'Questa prenotazione è chiusa.', 'photo-booking' ), 'error' );
 					break;
 				}
-				$order = Payments::balance_order( $a );
+				$order = Payments::balance_order( $a, 'pay_deposit' === $action ? $a->deposit_due() : null );
 				if ( is_wp_error( $order ) ) {
 					wc_add_notice( $order->get_error_message(), 'error' );
 					break;

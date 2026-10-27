@@ -2,6 +2,7 @@
 /**
  * @var \WC_Product[] $packages
  * @var string        $start
+ * @var array|null    $customer
  */
 
 use PhotoBooking\Admin\Admin;
@@ -27,8 +28,8 @@ $time = $start && strlen( $start ) >= 16 ? substr( $start, 11, 5 ) : '';
 					<p><label><?php esc_html_e( 'Cerca cliente esistente', 'photo-booking' ); ?><br>
 					<input type="search" class="regular-text pb-customer-search" placeholder="<?php esc_attr_e( 'Nome, email o telefono', 'photo-booking' ); ?>" autocomplete="off"></label></p>
 					<ul class="pb-customer-results"></ul>
-					<input type="hidden" name="customer_id" value="">
-					<p class="pb-customer-selected" hidden></p>
+					<input type="hidden" name="customer_id" value="<?php echo esc_attr( $customer['id'] ?? '' ); ?>">
+					<p class="pb-customer-selected" <?php echo $customer ? '' : 'hidden'; ?>><?php echo $customer ? esc_html( $customer['name'] . ' · ' . $customer['email'] . ( $customer['phone'] ? ' · ' . $customer['phone'] : '' ) ) : ''; ?></p>
 					<p class="description"><?php esc_html_e( 'Oppure compila i dati di un nuovo cliente (verrà creato il suo account):', 'photo-booking' ); ?></p>
 					<div class="pb-grid3">
 						<label><?php esc_html_e( 'Nome e cognome', 'photo-booking' ); ?><input type="text" name="name" class="widefat"></label>

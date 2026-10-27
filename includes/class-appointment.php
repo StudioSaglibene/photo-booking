@@ -166,6 +166,14 @@ class Appointment {
 		return in_array( $this->status, array( self::REJECTED, self::CANCELLED, self::EXPIRED ), true );
 	}
 
+	/** Deposit still to pay (0 when at least the deposit has been paid). */
+	public function deposit_due() {
+		if ( $this->deposit <= 0 || $this->paid + 0.009 >= $this->deposit ) {
+			return 0;
+		}
+		return round( min( $this->deposit - $this->paid, $this->balance_due() ), 2 );
+	}
+
 	public function balance_due() {
 		return max( 0, round( $this->total - $this->paid, 2 ) );
 	}
@@ -356,6 +364,15 @@ class Appointment {
 		}
 		$sql = "SELECT COUNT(*) FROM {$t} WHERE " . implode( ' AND ', $where );
 		return (int) ( $vals ? $wpdb->get_var( $wpdb->prepare( $sql, $vals ) ) : $wpdb->get_var( $sql ) ); // phpcs:ignore
+	}
+
+	/** Removes the booking and its payments, events and proposals. WooCommerce orders are left untouched. */
+	public function delete() {
+		global $wpdb;
+		foreach ( array( 'payments', 'events', 'proposals' ) as $table ) {
+			$wpdb->delete( Install::table( $table ), array( 'appointment_id' => $this->id ) );
+		}
+		return (bool) $wpdb->delete( Install::table( 'appointments' ), array( 'id' => $this->id ) );
 	}
 
 	/* ------------------------------------------------------------------ */

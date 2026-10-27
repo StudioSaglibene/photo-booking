@@ -16,15 +16,15 @@ defined( 'ABSPATH' ) || exit;
 
 $base    = admin_url( 'admin.php?page=pb-list' );
 $filters = array(
-	''                         => __( 'Tutte', 'photo-booking' ),
+	''                         => __( 'Attive', 'photo-booking' ),
 	'todo'                     => __( 'Da gestire', 'photo-booking' ) . ' (' . Admin::pending_count() . ')',
 	Appointment::CONFIRMED     => __( 'Confermate', 'photo-booking' ),
 	Appointment::PROPOSED      => __( 'Proposta inviata', 'photo-booking' ),
 	'balance'                  => __( 'Con saldo da incassare', 'photo-booking' ),
 	Appointment::COMPLETED     => __( 'Svolte', 'photo-booking' ),
-	Appointment::CANCELLED     => __( 'Annullate', 'photo-booking' ),
-	Appointment::REJECTED      => __( 'Rifiutate', 'photo-booking' ),
+	'archive'                  => __( 'Archivio', 'photo-booking' ),
 );
+$is_archive = 'archive' === $status;
 ?>
 <div class="wrap pb-wrap">
 	<h1 class="wp-heading-inline"><?php esc_html_e( 'Prenotazioni', 'photo-booking' ); ?></h1>
@@ -40,6 +40,16 @@ $filters = array(
 		echo implode( ' | </li>', $links ) . '</li>'; // phpcs:ignore
 		?>
 	</ul>
+
+	<?php if ( $is_archive ) : ?>
+		<div class="notice notice-info inline pb-archive-note"><p>
+			<?php esc_html_e( 'Qui finiscono le prenotazioni rifiutate, annullate e scadute. Non compaiono nel calendario né nelle statistiche; i pagamenti restano negli ordini WooCommerce.', 'photo-booking' ); ?>
+			<?php Admin::form_open( 'purge_archive', 'class="pb-inline-form"' ); ?>
+				<input type="hidden" name="days" value="30">
+				<button class="button button-link-delete" onclick="return confirm('<?php echo esc_js( __( 'Eliminare definitivamente tutte le prenotazioni in archivio chiuse da più di 30 giorni?', 'photo-booking' ) ); ?>')"><?php esc_html_e( 'Svuota l\'archivio (più vecchie di 30 giorni)', 'photo-booking' ); ?></button>
+			</form>
+		</p></div>
+	<?php endif; ?>
 
 	<form method="get" class="pb-list-filters">
 		<input type="hidden" name="page" value="pb-list">
@@ -73,7 +83,14 @@ $filters = array(
 				<td><?php echo esc_html( $a->package_name() ); ?></td>
 				<td><?php echo Admin::badge( $a ); // phpcs:ignore ?></td>
 				<td><?php echo esc_html( $a->payment_label() ); ?></td>
-				<td class="num"><?php echo wp_kses_post( wc_price( $a->paid ) . ' / ' . wc_price( $a->total ) ); ?><?php if ( $a->balance_due() > 0 && ! $a->is_closed() ) : ?><br><span class="pb-due"><?php echo wp_kses_post( sprintf( __( 'da saldare %s', 'photo-booking' ), wc_price( $a->balance_due() ) ) ); ?></span><?php endif; ?></td>
+				<td class="num"><?php echo wp_kses_post( wc_price( $a->paid ) . ' / ' . wc_price( $a->total ) ); ?><?php if ( $a->balance_due() > 0 && ! $a->is_closed() ) : ?><br><span class="pb-due"><?php echo wp_kses_post( sprintf( __( 'da saldare %s', 'photo-booking' ), wc_price( $a->balance_due() ) ) ); ?></span><?php endif; ?>
+					<?php if ( $is_archive ) : ?>
+						<?php Admin::form_open( 'delete', 'class="pb-inline-form"' ); ?>
+							<input type="hidden" name="id" value="<?php echo esc_attr( $a->id ); ?>">
+							<button class="button-link button-link-delete" onclick="return confirm('<?php echo esc_js( __( 'Eliminare definitivamente questa prenotazione?', 'photo-booking' ) ); ?>')"><?php esc_html_e( 'Elimina', 'photo-booking' ); ?></button>
+						</form>
+					<?php endif; ?>
+				</td>
 			</tr>
 		<?php endforeach; ?>
 		</tbody>

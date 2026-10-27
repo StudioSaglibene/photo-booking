@@ -89,12 +89,30 @@ $nonce = static function () use ( $a ) {
 			<dt><?php esc_html_e( 'Stato', 'photo-booking' ); ?></dt><dd><?php echo esc_html( $a->payment_label() ); ?></dd>
 		</dl>
 		<?php if ( $a->balance_due() > 0 && in_array( $a->status, array( Appointment::PENDING, Appointment::CONFIRMED, Appointment::COMPLETED ), true ) ) : ?>
-			<form method="post" class="pb-inline">
-				<?php $nonce(); ?>
-				<input type="hidden" name="pb_account_action" value="pay_balance">
-				<button type="submit" class="button alt"><?php echo wp_kses_post( sprintf( /* translators: %s amount */ __( 'Paga il saldo (%s)', 'photo-booking' ), wc_price( $a->balance_due() ) ) ); ?></button>
+			<?php if ( $a->hold_expires_at && $a->paid <= 0 ) : ?>
+				<p class="pb-deadline"><?php echo esc_html( sprintf( /* translators: %s date and time */ __( 'La data è riservata per te fino al %s: per confermarla paga l\'acconto entro quella data.', 'photo-booking' ), Time::format_datetime( $a->hold_expires_at ) ) ); ?></p>
+			<?php endif; ?>
+			<div class="pb-pay-actions">
+				<?php if ( $a->deposit_due() > 0 && $a->deposit_due() < $a->balance_due() - 0.009 ) : ?>
+					<form method="post" class="pb-inline">
+						<?php $nonce(); ?>
+						<input type="hidden" name="pb_account_action" value="pay_deposit">
+						<button type="submit" class="button alt"><?php echo wp_kses_post( sprintf( /* translators: %s amount */ __( 'Paga l\'acconto (%s)', 'photo-booking' ), wc_price( $a->deposit_due() ) ) ); ?></button>
+					</form>
+					<form method="post" class="pb-inline">
+						<?php $nonce(); ?>
+						<input type="hidden" name="pb_account_action" value="pay_balance">
+						<button type="submit" class="button"><?php echo wp_kses_post( sprintf( /* translators: %s amount */ __( 'Paga tutto (%s)', 'photo-booking' ), wc_price( $a->balance_due() ) ) ); ?></button>
+					</form>
+				<?php else : ?>
+					<form method="post" class="pb-inline">
+						<?php $nonce(); ?>
+						<input type="hidden" name="pb_account_action" value="pay_balance">
+						<button type="submit" class="button alt"><?php echo wp_kses_post( sprintf( /* translators: %s amount */ __( 'Paga il saldo (%s)', 'photo-booking' ), wc_price( $a->balance_due() ) ) ); ?></button>
+					</form>
+				<?php endif; ?>
 				<span class="pb-muted"><?php esc_html_e( 'Oppure paga in studio, anche in contanti.', 'photo-booking' ); ?></span>
-			</form>
+			</div>
 		<?php endif; ?>
 	</section>
 

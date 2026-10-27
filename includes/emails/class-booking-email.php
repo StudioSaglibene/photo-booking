@@ -41,6 +41,7 @@ class Booking_Email extends \WC_Email {
 			'{delivery_title}'     => '',
 			'{expires}'            => '',
 			'{amount}'             => '',
+			'{deadline}'           => '',
 		);
 		parent::__construct();
 		if ( ! $this->customer_email ) {
@@ -107,6 +108,10 @@ class Booking_Email extends \WC_Email {
 		if ( isset( $extra['amount'] ) ) {
 			$this->placeholders['{amount}'] = html_entity_decode( wp_strip_all_tags( wc_price( $extra['amount'] ) ), ENT_QUOTES, 'UTF-8' );
 		}
+		if ( ! empty( $extra['deadline'] ) ) {
+			$d = $extra['deadline'];
+			$this->placeholders['{deadline}'] = Time::format_datetime( $d instanceof \DateTimeInterface ? $d->format( Time::DB ) : (string) $d );
+		}
 		if ( isset( $extra['expires'] ) && $extra['expires'] ) {
 			$this->placeholders['{expires}'] = Time::format_date( '@' . ( is_object( $extra['expires'] ) ? $extra['expires']->getTimestamp() : (int) $extra['expires'] ) );
 		}
@@ -130,6 +135,11 @@ class Booking_Email extends \WC_Email {
 		$a    = $this->appointment;
 		switch ( $type ) {
 			case 'account':
+				return array( __( 'Vai alla tua area privata', 'photo-booking' ), wc_get_account_endpoint_url( Account::EP_BOOKINGS ) );
+			case 'pay':
+				if ( ! empty( $this->extra['pay_url'] ) ) {
+					return array( __( 'Paga ora con carta', 'photo-booking' ), $this->extra['pay_url'] );
+				}
 				return array( __( 'Vai alla tua area privata', 'photo-booking' ), wc_get_account_endpoint_url( Account::EP_BOOKINGS ) );
 			case 'appointment':
 				return array( __( 'Scegli la nuova data', 'photo-booking' ), $a ? $a->account_url() : wc_get_account_endpoint_url( Account::EP_BOOKINGS ) );

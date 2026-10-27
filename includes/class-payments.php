@@ -125,10 +125,14 @@ class Payments {
 	 *
 	 * @return \WC_Order|\WP_Error
 	 */
-	public static function balance_order( Appointment $appt ) {
+	public static function balance_order( Appointment $appt, $amount = null ) {
 		$due = $appt->balance_due();
 		if ( $due <= 0 ) {
 			return new \WP_Error( 'pb_nothing_due', __( 'Non c\'è nessun saldo da pagare.', 'photo-booking' ) );
+		}
+		// A partial amount (the deposit of a booking entered by the studio) is allowed; never more than what is due.
+		if ( null !== $amount && (float) $amount > 0 && (float) $amount < $due - 0.009 ) {
+			$due = round( (float) $amount, 2 );
 		}
 		$existing_id = (int) $appt->get_meta( 'balance_order_id' );
 		if ( $existing_id ) {
@@ -140,10 +144,11 @@ class Payments {
 				$existing->update_status( 'cancelled', __( 'Sostituito da un nuovo ordine di saldo.', 'photo-booking' ) );
 			}
 		}
-		$order = self::create_order( $appt, $due, 'balance' );
+		$order = self::create_order( $appt, $due, $due < $appt->balance_due() - 0.009 ? 'deposit' : 'balance' );
 		if ( is_wp_error( $order ) ) {
 			return $order;
 		}
+		$order->update_meta_data( '_pb_order_type', 'balance' );
 		$order->set_status( 'pending' );
 		$order->save();
 		$appt->update( array( 'meta' => array( 'balance_order_id' => $order->get_id() ) ) );
@@ -196,7 +201,8 @@ class Payments {
 			return $order;
 		}
 		$product = $appt->product();
-		$name    = ( 'cash' === $kind ? __( 'Pagamento in sede', 'photo-booking' ) : __( 'Saldo', 'photo-booking' ) ) . ' – ' . $appt->package_name() . ' (' . $appt->number() . ')';
+		$labels  = array( 'cash' => __( 'Pagamento in sede', 'photo-booking' ), 'deposit' => __( 'Acconto', 'photo-booking' ), 'balance' => __( 'Saldo', 'photo-booking' ) );
+		$name    = ( $labels[ $kind ] ?? $labels['balance'] ) . ' – ' . $appt->package_name() . ' (' . $appt->number() . ')';
 		$net     = $amount;
 		if ( $product && wc_tax_enabled() && wc_prices_include_tax() ) {
 			$incl = wc_get_price_including_tax( $product, array( 'price' => 100 ) );

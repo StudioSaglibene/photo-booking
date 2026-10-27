@@ -158,3 +158,5 @@
 .pb-delivery-body { flex: 1; display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
 .pb-delivery-meta, .pb-delivery-exp { font-size: .9em; color: var(--pb-muted); }
 @media (max-width: 560px) { .pb-delivery { flex-wrap: wrap; } .pb-delivery-action { width: 100%; } .pb-delivery-action .button { width: 100%; text-align: center; } }
+.pb-pay-actions { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+.pb-deadline { padding: 10px 14px; background: #f6f1ea; border-left: 3px solid #141414; font-size: 14px; }

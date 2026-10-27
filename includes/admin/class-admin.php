@@ -5,6 +5,9 @@ use PhotoBooking\Appointment;
 use PhotoBooking\Availability;
 use PhotoBooking\Bookings;
 use PhotoBooking\Cron;
+use PhotoBooking\Customers;
+use PhotoBooking\Stats;
+use PhotoBooking\Time;
 use PhotoBooking\Deliveries;
 use PhotoBooking\Install;
 use PhotoBooking\Package;
@@ -13,7 +16,6 @@ use PhotoBooking\Policy;
 use PhotoBooking\R2;
 use PhotoBooking\Rest;
 use PhotoBooking\Settings;
-use PhotoBooking\Time;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -25,6 +27,8 @@ class Admin {
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'trim_menu' ), 999 );
 		add_action( 'admin_bar_menu', array( __CLASS__, 'trim_admin_bar' ), 999 );
+		add_filter( 'editable_roles', array( __CLASS__, 'studio_editable_roles' ) );
+		add_filter( 'map_meta_cap', array( __CLASS__, 'studio_protect_users' ), 10, 4 );
 		add_action( 'admin_init', array( __CLASS__, 'studio_dashboard_redirect' ) );
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'assets' ) );
@@ -49,6 +53,8 @@ class Admin {
 		add_submenu_page( 'pb-calendar', __( 'Calendario', 'photo-booking' ), __( 'Calendario', 'photo-booking' ), Install::CAP, 'pb-calendar', array( __CLASS__, 'page_calendar' ) );
 		add_submenu_page( 'pb-calendar', __( 'Elenco prenotazioni', 'photo-booking' ), __( 'Elenco', 'photo-booking' ) . $bubble, Install::CAP, 'pb-list', array( __CLASS__, 'page_list' ) );
 		add_submenu_page( 'pb-calendar', __( 'Nuovo appuntamento', 'photo-booking' ), __( 'Nuovo appuntamento', 'photo-booking' ), Install::CAP, 'pb-new', array( __CLASS__, 'page_new' ) );
+		add_submenu_page( 'pb-calendar', __( 'Clienti', 'photo-booking' ), __( 'Clienti', 'photo-booking' ), Install::CAP, 'pb-customers', array( __CLASS__, 'page_customers' ) );
+		add_submenu_page( 'pb-calendar', __( 'Statistiche', 'photo-booking' ), __( 'Statistiche', 'photo-booking' ), Install::CAP, 'pb-stats', array( __CLASS__, 'page_stats' ) );
 		add_submenu_page( 'pb-calendar', __( 'Consegne', 'photo-booking' ), __( 'Consegne', 'photo-booking' ), Install::CAP, 'pb-deliveries', array( __CLASS__, 'page_deliveries' ) );
 		add_submenu_page( 'pb-calendar', __( 'Pacchetti', 'photo-booking' ), __( 'Pacchetti', 'photo-booking' ), 'edit_products', 'edit.php?post_type=product&product_type=' . Package::TYPE );
 		add_submenu_page( 'pb-calendar', __( 'Impostazioni', 'photo-booking' ), __( 'Impostazioni', 'photo-booking' ), 'manage_options', 'pb-settings', array( __CLASS__, 'page_settings' ) );
@@ -184,7 +190,25 @@ class Admin {
 		remove_submenu_page( 'woocommerce', 'wc-admin' );
 		remove_submenu_page( 'edit.php?post_type=product', 'product_attributes' );
 		remove_submenu_page( 'edit.php?post_type=product', 'edit-tags.php?taxonomy=product_tag&post_type=product' );
-		remove_submenu_page( 'users.php', 'user-new.php' );
+	}
+
+	/** The studio manages customers only: no admin or shop-manager accounts can be created or edited from there. */
+	public static function studio_editable_roles( $roles ) {
+		if ( ! self::is_studio_user() ) {
+			return $roles;
+		}
+		return array_intersect_key( $roles, array( 'customer' => 1, 'subscriber' => 1 ) );
+	}
+
+	public static function studio_protect_users( $caps, $cap, $user_id, $args ) {
+		if ( ! in_array( $cap, array( 'edit_user', 'delete_user', 'remove_user' ), true ) || empty( $args[0] ) || ! self::is_studio_user() ) {
+			return $caps;
+		}
+		$target = get_userdata( (int) $args[0] );
+		if ( $target && (int) $args[0] !== $user_id && array_diff( (array) $target->roles, array( 'customer', 'subscriber' ) ) ) {
+			return array( 'do_not_allow' );
+		}
+		return $caps;
 	}
 
 	public static function trim_admin_bar( $bar ) {
@@ -221,7 +245,10 @@ class Admin {
 				'orderby' => 'start_at',
 			)
 		);
-		self::view( 'calendar', array( 'pending' => $pending ) );
+		if ( ! function_exists( 'is_plugin_active' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+		self::view( 'calendar', array( 'pending' => $pending, 'maintenance' => self::maintenance_state() ) );
 	}
 
 	public static function page_list() {
@@ -241,10 +268,16 @@ class Admin {
 			$args['status'] = array( Appointment::PENDING, Appointment::PROPOSAL_EXPIRED, Appointment::NEEDS_ACTION );
 		} elseif ( 'balance' === $status ) {
 			$args['status'] = array( Appointment::PENDING, Appointment::CONFIRMED, Appointment::COMPLETED, Appointment::PROPOSED );
+		} elseif ( 'archive' === $status ) {
+			$args['status']  = array( Appointment::REJECTED, Appointment::CANCELLED, Appointment::EXPIRED );
+			$args['orderby'] = 'updated_at';
+			$args['order']   = 'DESC';
+			$when            = 'all';
 		} elseif ( $status ) {
 			$args['status'] = $status;
 		} else {
-			$args['exclude_status'] = array( Appointment::PENDING_PAYMENT, Appointment::EXPIRED );
+			// Default view: only live bookings. Rejected, cancelled and expired ones live in the archive.
+			$args['exclude_status'] = array( Appointment::PENDING_PAYMENT, Appointment::EXPIRED, Appointment::REJECTED, Appointment::CANCELLED );
 		}
 		if ( 'upcoming' === $when ) {
 			$args['from'] = Time::now()->setTime( 0, 0 )->format( Time::DB );
@@ -287,13 +320,41 @@ class Admin {
 	}
 
 	public static function page_new() {
+		$customer = absint( $_GET['customer'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification
 		self::view(
 			'new',
 			array(
 				'packages' => Package::all(),
 				'start'    => sanitize_text_field( wp_unslash( $_GET['start'] ?? '' ) ), // phpcs:ignore WordPress.Security.NonceVerification
+				'customer' => $customer ? Customers::row( $customer ) : null,
 			)
 		);
+	}
+
+	public static function page_customers() {
+		$search = sanitize_text_field( wp_unslash( $_GET['s'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification
+		$paged  = max( 1, absint( $_GET['paged'] ?? 1 ) ); // phpcs:ignore WordPress.Security.NonceVerification
+		$per    = 40;
+		$result = Customers::search( $search, $per, ( $paged - 1 ) * $per );
+		self::view( 'customers', array( 'rows' => $result['rows'], 'total' => $result['total'], 'search' => $search, 'paged' => $paged, 'per' => $per ) );
+	}
+
+	public static function page_stats() {
+		$from    = sanitize_text_field( wp_unslash( $_GET['from'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification
+		$to      = sanitize_text_field( wp_unslash( $_GET['to'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification
+		$product = absint( $_GET['product_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification
+		$from    = preg_match( '/^\d{4}-\d{2}-\d{2}$/', $from ) ? $from : Time::now()->format( 'Y' ) . '-01-01';
+		$to      = preg_match( '/^\d{4}-\d{2}-\d{2}$/', $to ) ? $to : Time::now()->format( 'Y' ) . '-12-31';
+		self::view( 'stats', array( 'from' => $from, 'to' => $to, 'product' => $product, 'stats' => Stats::compute( $from, $to, $product ), 'packages' => Package::all() ) );
+	}
+
+	/** The Maintenance plugin (coming-soon page) is admin-only: the studio gets a plain on/off switch here. */
+	public static function maintenance_state() {
+		if ( ! is_plugin_active( 'maintenance/maintenance.php' ) ) {
+			return null;
+		}
+		$o = get_option( 'maintenance_options' );
+		return is_array( $o ) ? (bool) ( $o['state'] ?? false ) : false;
 	}
 
 	public static function page_deliveries() {
@@ -380,7 +441,7 @@ class Admin {
 		$a  = ! empty( $post['id'] ) ? Appointment::get( absint( $post['id'] ) ) : null;
 		$r  = null;
 		$ok = '';
-		if ( null === $a && in_array( $do, array( 'confirm', 'reject', 'propose', 'move', 'cancel', 'complete', 'cash', 'payment_link', 'edit' ), true ) ) {
+		if ( null === $a && in_array( $do, array( 'confirm', 'reject', 'propose', 'move', 'cancel', 'complete', 'cash', 'payment_link', 'edit', 'remind', 'deadline', 'delete' ), true ) ) {
 			self::notice( 'error', esc_html__( 'Prenotazione non trovata.', 'photo-booking' ) );
 			wp_safe_redirect( $back );
 			exit;
@@ -434,12 +495,69 @@ class Admin {
 				break;
 
 			case 'payment_link':
-				$order = Payments::balance_order( $a );
+				$what  = 'deposit' === ( $post['what'] ?? '' ) ? 'deposit' : 'balance';
+				$order = Payments::balance_order( $a, 'deposit' === $what ? $a->deposit_due() : null );
 				if ( is_wp_error( $order ) ) {
 					$r = $order;
 				} else {
-					$ok = sprintf( __( 'Link di pagamento del saldo: <input type="text" readonly class="large-text" onclick="this.select()" value="%s">', 'photo-booking' ), esc_attr( $order->get_checkout_payment_url() ) );
+					$ok = sprintf( __( 'Link di pagamento (%1$s): <input type="text" readonly class="large-text" onclick="this.select()" value="%2$s">', 'photo-booking' ), wp_strip_all_tags( wc_price( $order->get_total() ) ), esc_attr( $order->get_checkout_payment_url() ) );
 				}
+				break;
+
+			case 'remind':
+				$what = 'deposit' === ( $post['what'] ?? '' ) ? 'deposit' : 'balance';
+				$r    = Bookings::send_payment_request( $a, $what, sanitize_textarea_field( $post['message'] ?? '' ) );
+				$ok   = __( 'Sollecito inviato al cliente con il link di pagamento.', 'photo-booking' );
+				break;
+
+			case 'deadline':
+				$dt = self::dt_from_input( $post['deadline'] ?? '' );
+				if ( $a->paid > 0 ) {
+					$r = new \WP_Error( 'pb', __( 'La scadenza vale solo finché non è stato pagato nulla.', 'photo-booking' ) );
+					break;
+				}
+				$a->update( array( 'hold_expires_at' => $dt ? $dt : null, 'meta' => array( 'deadline_reminder_sent' => '' ) ) );
+				$a->log( 'deadline', $dt ? 'Scadenza pagamento impostata al ' . Time::format_datetime( $dt ) : 'Scadenza pagamento rimossa' );
+				$r  = true;
+				$ok = $dt ? __( 'Scadenza del pagamento salvata: il cliente riceve un promemoria 24 ore prima e, senza acconto, la prenotazione scade da sola.', 'photo-booking' ) : __( 'Scadenza rimossa: la prenotazione resta valida anche senza pagamento.', 'photo-booking' );
+				break;
+
+			case 'delete':
+				if ( ! $a->is_closed() ) {
+					$r = new \WP_Error( 'pb', __( 'Si possono eliminare solo le prenotazioni rifiutate, annullate o scadute.', 'photo-booking' ) );
+					break;
+				}
+				$a->delete();
+				$r    = true;
+				$ok   = __( 'Prenotazione eliminata definitivamente.', 'photo-booking' );
+				$back = admin_url( 'admin.php?page=pb-list&status=archive' );
+				break;
+
+			case 'purge_archive':
+				$n    = Bookings::purge_archive( absint( $post['days'] ?? 30 ) );
+				$r    = true;
+				$ok   = sprintf( _n( '%d prenotazione eliminata dall\'archivio.', '%d prenotazioni eliminate dall\'archivio.', $n, 'photo-booking' ), $n );
+				$back = admin_url( 'admin.php?page=pb-list&status=archive' );
+				break;
+
+			case 'new_customer':
+				$r = Customers::create( $post );
+				if ( ! is_wp_error( $r ) ) {
+					$ok   = __( 'Cliente creato.', 'photo-booking' ) . ( ! empty( $post['welcome'] ) ? ' ' . __( 'Email di benvenuto inviata con il link per scegliere la password.', 'photo-booking' ) : '' );
+					$back = admin_url( 'admin.php?page=pb-customers&s=' . rawurlencode( sanitize_email( $post['email'] ?? '' ) ) );
+				}
+				break;
+
+			case 'maintenance':
+				$o = get_option( 'maintenance_options' );
+				if ( ! is_array( $o ) ) {
+					$r = new \WP_Error( 'pb', __( 'Plugin Maintenance non attivo.', 'photo-booking' ) );
+					break;
+				}
+				$o['state'] = ! empty( $post['state'] ) ? 1 : 0;
+				update_option( 'maintenance_options', $o );
+				$r  = true;
+				$ok = $o['state'] ? __( 'Sito in manutenzione: i visitatori vedono la pagina di cortesia.', 'photo-booking' ) : __( 'Sito di nuovo online per tutti.', 'photo-booking' );
 				break;
 
 			case 'edit':
@@ -631,6 +749,8 @@ class Admin {
 			'delivery_days'          => $int( 'delivery_days', 1 ),
 			'delivery_warn_days'     => $int( 'delivery_warn_days' ),
 			'delivery_purge_days'    => $int( 'delivery_purge_days' ),
+			'manual_payment_days'    => $int( 'manual_payment_days' ),
+			'purge_stale_days'       => $int( 'purge_stale_days' ),
 			'download_link_minutes'  => $int( 'download_link_minutes', 1 ),
 			'fullcalendar_src'       => esc_url_raw( $p['fullcalendar_src'] ?? '' ) ?: Settings::defaults()['fullcalendar_src'],
 		);

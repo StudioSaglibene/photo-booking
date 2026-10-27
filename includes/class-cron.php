@@ -44,7 +44,11 @@ class Cron {
 
 	public static function run() {
 		Bookings::expire_holds();
+		Bookings::payment_deadlines();
 		Bookings::expire_proposals();
+		if ( (int) Settings::get( 'purge_stale_days' ) > 0 ) {
+			Bookings::purge_stale( (int) Settings::get( 'purge_stale_days' ) );
+		}
 		Bookings::send_reminders();
 		Bookings::auto_complete();
 		Deliveries::cron();

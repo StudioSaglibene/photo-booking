@@ -110,21 +110,46 @@ $finder      = static function ( $target ) use ( $a ) {
 
 			<?php if ( ! $a->is_closed() && $due > 0 ) : ?>
 				<div class="pb-box">
-					<h2><?php esc_html_e( 'Saldo', 'photo-booking' ); ?></h2>
+					<h2><?php echo $a->paid <= 0 ? esc_html__( 'Acconto e saldo', 'photo-booking' ) : esc_html__( 'Saldo', 'photo-booking' ); ?></h2>
+					<?php if ( $a->paid <= 0 ) : ?>
+						<?php Admin::form_open( 'deadline', 'class="pb-deadline-form"' ); ?>
+							<input type="hidden" name="id" value="<?php echo esc_attr( $a->id ); ?>">
+							<p><label><?php esc_html_e( 'Scadenza del pagamento', 'photo-booking' ); ?> <input type="datetime-local" name="deadline" step="300" value="<?php echo esc_attr( $a->hold_expires_at ? Admin::to_input( $a->hold_expires_at ) : '' ); ?>"></label>
+							<button class="button"><?php esc_html_e( 'Salva', 'photo-booking' ); ?></button>
+							<span class="description"><?php esc_html_e( 'Promemoria automatico al cliente 24 ore prima; senza acconto entro la scadenza la prenotazione scade e la data torna libera. Vuoto = nessuna scadenza.', 'photo-booking' ); ?></span></p>
+						</form>
+					<?php endif; ?>
 					<div class="pb-two">
 						<?php Admin::form_open( 'cash' ); ?>
 							<input type="hidden" name="id" value="<?php echo esc_attr( $a->id ); ?>">
 							<p><label><?php esc_html_e( 'Ricevuto in contanti', 'photo-booking' ); ?><br>
-							<input type="number" step="0.01" min="0.01" name="amount" value="<?php echo esc_attr( wc_format_decimal( $due, 2 ) ); ?>" class="small-text" style="width:110px"> <?php echo esc_html( get_woocommerce_currency_symbol() ); ?></label></p>
+							<input type="number" step="0.01" min="0.01" name="amount" value="<?php echo esc_attr( wc_format_decimal( $a->deposit_due() > 0 ? $a->deposit_due() : $due, 2 ) ); ?>" class="small-text" style="width:110px"> <?php echo esc_html( get_woocommerce_currency_symbol() ); ?></label></p>
 							<p><input type="text" name="note" class="regular-text" placeholder="<?php esc_attr_e( 'Nota (facoltativa)', 'photo-booking' ); ?>"></p>
 							<p><label><input type="checkbox" name="notify" value="1" checked> <?php esc_html_e( 'Invia email "pagamento ricevuto"', 'photo-booking' ); ?></label></p>
-							<button class="button button-primary"><?php esc_html_e( 'Registra saldo in contanti', 'photo-booking' ); ?></button>
+							<button class="button button-primary"><?php esc_html_e( 'Registra pagamento in contanti', 'photo-booking' ); ?></button>
 						</form>
-						<?php Admin::form_open( 'payment_link' ); ?>
-							<input type="hidden" name="id" value="<?php echo esc_attr( $a->id ); ?>">
-							<p class="description"><?php esc_html_e( 'Il cliente può pagare il saldo dalla sua area privata. Puoi anche generare un link di pagamento da inviare (es. su WhatsApp).', 'photo-booking' ); ?></p>
-							<button class="button"><?php esc_html_e( 'Genera link di pagamento', 'photo-booking' ); ?></button>
-						</form>
+						<div>
+							<?php Admin::form_open( 'remind' ); ?>
+								<input type="hidden" name="id" value="<?php echo esc_attr( $a->id ); ?>">
+								<p><label><?php esc_html_e( 'Sollecito via email', 'photo-booking' ); ?><br>
+								<select name="what">
+									<?php if ( $a->deposit_due() > 0 && $a->deposit_due() < $due - 0.009 ) : ?>
+										<option value="deposit"><?php echo esc_html( sprintf( __( 'Acconto di %s', 'photo-booking' ), wp_strip_all_tags( wc_price( $a->deposit_due() ) ) ) ); ?></option>
+									<?php endif; ?>
+									<option value="balance"><?php echo esc_html( sprintf( __( 'Saldo di %s', 'photo-booking' ), wp_strip_all_tags( wc_price( $due ) ) ) ); ?></option>
+								</select></label></p>
+								<p><textarea name="message" rows="2" class="large-text" placeholder="<?php esc_attr_e( 'Due righe personali (facoltative), aggiunte al testo preimpostato', 'photo-booking' ); ?>"></textarea></p>
+								<button class="button"><?php esc_html_e( 'Invia sollecito con link di pagamento', 'photo-booking' ); ?></button>
+							</form>
+							<?php Admin::form_open( 'payment_link', 'class="pb-inline-form"' ); ?>
+								<input type="hidden" name="id" value="<?php echo esc_attr( $a->id ); ?>">
+								<?php if ( $a->deposit_due() > 0 && $a->deposit_due() < $due - 0.009 ) : ?>
+									<button class="button-link" name="what" value="deposit"><?php esc_html_e( 'Copia link per l\'acconto', 'photo-booking' ); ?></button> ·
+								<?php endif; ?>
+								<button class="button-link" name="what" value="balance"><?php esc_html_e( 'Copia link per il saldo', 'photo-booking' ); ?></button>
+								<span class="description"><?php esc_html_e( '(da incollare su WhatsApp)', 'photo-booking' ); ?></span>
+							</form>
+						</div>
 					</div>
 				</div>
 			<?php endif; ?>
@@ -236,6 +261,15 @@ $finder      = static function ( $target ) use ( $a ) {
 					<?php endforeach; ?>
 				</ul>
 			</div>
+
+			<?php if ( $a->is_closed() ) : ?>
+				<div class="pb-box pb-row-actions">
+					<?php Admin::form_open( 'delete' ); ?>
+						<input type="hidden" name="id" value="<?php echo esc_attr( $a->id ); ?>">
+						<button class="button button-link-delete" onclick="return confirm('<?php echo esc_js( __( 'Eliminare definitivamente questa prenotazione? Gli ordini WooCommerce restano.', 'photo-booking' ) ); ?>')"><?php esc_html_e( 'Elimina definitivamente', 'photo-booking' ); ?></button>
+					</form>
+				</div>
+			<?php endif; ?>
 
 			<details class="pb-box">
 				<summary><h2><?php esc_html_e( 'Modifica dati', 'photo-booking' ); ?></h2></summary>

@@ -94,3 +94,15 @@ details.pb-box[open] > summary { margin-bottom: 12px; }
 .pb-settings pre { background: #f6f7f7; padding: 10px; overflow: auto; }
 .pb-help { background: #fff; border: 1px solid #dcdcde; padding: 10px 16px; border-radius: 4px; }
 .pb-help summary { cursor: pointer; font-weight: 600; }
+
+.pb-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 16px 0 20px; }
+.pb-kpi { background: #fff; border: 1px solid #dcdcde; padding: 14px 16px; }
+.pb-kpi span { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: #646970; }
+.pb-kpi strong { display: block; font-size: 22px; line-height: 1.2; margin: 4px 0 2px; white-space: nowrap; }
+.pb-kpi small { color: #646970; }
+.pb-kpi-due strong { color: #b32d2e; }
+.pb-stats-table tfoot th { font-weight: 600; }
+.pb-archive-note p { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.pb-maintenance { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px; }
+.pb-maintenance.is-on { border-left: 4px solid #b32d2e; }
+.pb-deadline-form { margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid #eee; }
