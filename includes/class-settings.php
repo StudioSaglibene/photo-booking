@@ -41,6 +41,8 @@ class Settings {
 			'policy_text'             => "Fino a 7 giorni prima: rimborso completo di quanto versato.\nMeno di 7 giorni prima o mancata presentazione: l'acconto versato non viene restituito.\nPuoi spostare gratuitamente l'appuntamento una volta, fino a 48 ore prima.\nSe annulliamo noi la sessione, rimborso completo o nuova data a tua scelta.",
 			'reminder_enabled'        => 1,
 			'manual_payment_days'     => 3,
+			'auto_reminders_enabled'  => 1,
+			'auto_reminder_days'      => '30,10,1',
 			'purge_stale_days'        => 7,
 			'studio_address'          => '',
 			// Deliveries / R2.

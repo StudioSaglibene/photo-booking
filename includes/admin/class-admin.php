@@ -28,6 +28,8 @@ class Admin {
 		add_action( 'admin_menu', array( __CLASS__, 'trim_menu' ), 999 );
 		add_action( 'admin_bar_menu', array( __CLASS__, 'trim_admin_bar' ), 999 );
 		add_filter( 'editable_roles', array( __CLASS__, 'studio_editable_roles' ) );
+		add_filter( 'user_has_cap', array( __CLASS__, 'studio_maintenance_cap' ), 10, 4 );
+		add_action( 'admin_menu', array( __CLASS__, 'studio_maintenance_menu' ), 998 );
 		add_filter( 'map_meta_cap', array( __CLASS__, 'studio_protect_users' ), 10, 4 );
 		add_action( 'admin_init', array( __CLASS__, 'studio_dashboard_redirect' ) );
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
@@ -165,7 +167,46 @@ class Admin {
 
 	private static function is_studio_user() {
 		$u = wp_get_current_user();
-		return $u && in_array( Install::ROLE, (array) $u->roles, true ) && ! current_user_can( 'manage_options' );
+		return $u && in_array( Install::ROLE, (array) $u->roles, true ) && ! in_array( 'administrator', (array) $u->roles, true );
+	}
+
+	/** Is this request the Maintenance plugin's page or one of its AJAX actions? */
+	private static function is_maintenance_request() {
+		$page   = sanitize_key( $_REQUEST['page'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification
+		$action = sanitize_key( $_REQUEST['action'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification
+		return 'maintenance' === $page || in_array( $action, array( 'mtnc_action', 'maintenance_dismiss_notice' ), true );
+	}
+
+	/**
+	 * The Maintenance plugin only accepts administrators (manage_options). The studio gets that capability
+	 * for its page and its save actions alone, so it can switch the courtesy page on and off and edit its texts.
+	 */
+	public static function studio_maintenance_cap( $allcaps, $caps, $args, $user ) {
+		if ( ! is_admin() && ! wp_doing_ajax() ) {
+			return $allcaps;
+		}
+		if ( ! in_array( Install::ROLE, (array) $user->roles, true ) || in_array( 'administrator', (array) $user->roles, true ) ) {
+			return $allcaps;
+		}
+		if ( self::is_maintenance_request() ) {
+			$allcaps['manage_options'] = true;
+		}
+		return $allcaps;
+	}
+
+	/** Menu entry for the studio on the pages where the plugin's own entry is hidden. */
+	public static function studio_maintenance_menu() {
+		if ( ! self::is_studio_user() || self::is_maintenance_request() || ! class_exists( 'MTNC' ) ) {
+			return;
+		}
+		$hook = add_menu_page( __( 'Manutenzione', 'photo-booking' ), __( 'Manutenzione', 'photo-booking' ), Install::CAP, 'pb-maintenance', '__return_null', 'dashicons-hammer', 57 );
+		add_action(
+			'load-' . $hook,
+			static function () {
+				wp_safe_redirect( admin_url( 'admin.php?page=maintenance' ) );
+				exit;
+			}
+		);
 	}
 
 	/** The photographer sees only what she uses. */
@@ -173,7 +214,7 @@ class Admin {
 		if ( ! self::is_studio_user() ) {
 			return;
 		}
-		foreach ( array( 'index.php', 'edit.php', 'edit.php?post_type=page', 'edit-comments.php', 'themes.php', 'plugins.php', 'tools.php', 'options-general.php', 'elementor', 'edit.php?post_type=elementor_library', 'wpforms-overview', 'maintenance', 'edit.php?post_type=works', 'edit.php?post_type=albums', 'edit.php?post_type=people', 'edit.php?post_type=a13_albums', 'edit.php?post_type=a13_works', 'wc-admin&path=/analytics/overview', 'wc-admin&path=/marketing', 'woocommerce-marketing', 'wp-mail-smtp', 'bsf-custom-fonts', 'edit.php?post_type=product&page=product_attributes', 'elementor-home', 'import.php', 'admin.php?page=wc-settings&tab=checkout&from=PAYMENTS_MENU_ITEM' ) as $slug ) {
+		foreach ( array( 'index.php', 'edit.php', 'edit.php?post_type=page', 'edit-comments.php', 'themes.php', 'plugins.php', 'tools.php', 'options-general.php', 'elementor', 'edit.php?post_type=elementor_library', 'wpforms-overview', 'edit.php?post_type=works', 'edit.php?post_type=albums', 'edit.php?post_type=people', 'edit.php?post_type=a13_albums', 'edit.php?post_type=a13_works', 'wc-admin&path=/analytics/overview', 'wc-admin&path=/marketing', 'woocommerce-marketing', 'wp-mail-smtp', 'bsf-custom-fonts', 'edit.php?post_type=product&page=product_attributes', 'elementor-home', 'import.php', 'admin.php?page=wc-settings&tab=checkout&from=PAYMENTS_MENU_ITEM' ) as $slug ) {
 			remove_menu_page( $slug );
 		}
 		// Leftover taxonomy entries (categories of posts, albums, works, people, Elementor) once their parents are gone.
@@ -741,6 +782,8 @@ class Admin {
 			'credit_validity_months' => $int( 'credit_validity_months', 1 ),
 			'policy_text'            => sanitize_textarea_field( $p['policy_text'] ?? '' ),
 			'reminder_enabled'       => empty( $p['reminder_enabled'] ) ? 0 : 1,
+			'auto_reminders_enabled' => empty( $p['auto_reminders_enabled'] ) ? 0 : 1,
+			'auto_reminder_days'     => implode( ',', array_filter( array_map( 'absint', explode( ',', (string) ( $p['auto_reminder_days'] ?? '' ) ) ) ) ),
 			'r2_account_id'          => sanitize_text_field( $p['r2_account_id'] ?? '' ),
 			'r2_access_key'          => sanitize_text_field( $p['r2_access_key'] ?? '' ),
 			'r2_bucket'              => sanitize_text_field( $p['r2_bucket'] ?? '' ),

@@ -50,6 +50,7 @@ class Cron {
 			Bookings::purge_stale( (int) Settings::get( 'purge_stale_days' ) );
 		}
 		Bookings::send_reminders();
+		Bookings::auto_payment_reminders();
 		Bookings::auto_complete();
 		Deliveries::cron();
 		update_option( 'pb_cron_last_run', time(), false );

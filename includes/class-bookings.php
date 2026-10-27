@@ -723,6 +723,66 @@ class Bookings {
 		}
 	}
 
+	/**
+	 * Automatic payment reminders: N days before the session (default 30, 10 and 1) while something is still due.
+	 * Each threshold is sent once, inside a one-day window, and never within 20 hours of another reminder.
+	 */
+	public static function auto_payment_reminders() {
+		if ( ! Settings::get( 'auto_reminders_enabled' ) ) {
+			return;
+		}
+		$hour = (int) Time::now()->format( 'G' );
+		if ( $hour < 8 || $hour >= 20 ) {
+			return;
+		}
+		$days = array_filter( array_map( 'intval', explode( ',', (string) Settings::get( 'auto_reminder_days' ) ) ) );
+		rsort( $days );
+		if ( ! $days ) {
+			return;
+		}
+		$now  = Time::now();
+		$list = Appointment::query(
+			array(
+				'status' => array( Appointment::PENDING, Appointment::CONFIRMED ),
+				'from'   => $now->format( Time::DB ),
+				'to'     => $now->modify( '+' . ( max( $days ) + 1 ) . ' days' )->format( Time::DB ),
+			)
+		);
+		foreach ( $list as $a ) {
+			if ( $a->balance_due() <= 0 ) {
+				continue;
+			}
+			$days_until = ( $a->start()->getTimestamp() - $now->getTimestamp() ) / DAY_IN_SECONDS;
+			$sent       = (array) $a->get_meta( 'auto_reminders', array() );
+			foreach ( $days as $t ) {
+				if ( in_array( $t, $sent, true ) || $days_until > $t || $days_until <= $t - 1 ) {
+					continue;
+				}
+				$sent[] = $t;
+				$a->update( array( 'meta' => array( 'auto_reminders' => $sent ) ) );
+				if ( self::reminded_recently( $a, 20 ) ) {
+					break; // A reminder went out in the last hours (manual or deadline): count this threshold as done.
+				}
+				$what = $a->deposit_due() > 0 ? 'deposit' : 'balance';
+				$r    = self::send_payment_request( $a, $what, '', 'payment_request' );
+				if ( ! is_wp_error( $r ) ) {
+					$a->log( 'reminder', sprintf( 'Sollecito automatico: %d giorni prima della sessione', $t ) );
+				}
+				break; // One email per run per booking.
+			}
+		}
+	}
+
+	private static function reminded_recently( Appointment $a, $hours ) {
+		$limit = Time::now()->modify( '-' . (int) $hours . ' hours' )->format( Time::DB );
+		foreach ( $a->history() as $e ) {
+			if ( 'reminder' === $e['type'] ) {
+				return $e['created_at'] > $limit;
+			}
+		}
+		return false;
+	}
+
 	public static function send_reminders() {
 		if ( ! Settings::get( 'reminder_enabled' ) ) {
 			return;
