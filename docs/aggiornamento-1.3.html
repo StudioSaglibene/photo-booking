@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Sistema di prenotazioni – Novità di ottobre 2026</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  body { font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; color: #141414; font-size: 11.5pt; line-height: 1.5; max-width: 180mm; margin: 0 auto; }
+  h1 { font-size: 24pt; font-weight: 500; margin: 0 0 4px; }
+  .sub { color: #666; margin: 0 0 24px; }
+  h2 { font-size: 15pt; font-weight: 600; margin: 26px 0 8px; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
+  ul { padding-left: 20px; } li { margin: 4px 0; }
+  .box { background: #f6f1ea; padding: 10px 14px; border-left: 3px solid #141414; margin: 10px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 10.5pt; margin: 8px 0; }
+  th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { background: #f4f4f4; }
+</style>
+</head>
+<body>
+<h1>Novità del sistema di prenotazioni</h1>
+<p class="sub">Aggiornamento di ottobre 2026 · da leggere insieme alla guida principale</p>
+
+<h2>1. Clienti senza appuntamento</h2>
+<p>Nuova voce <strong>Prenotazioni → Clienti</strong>: l'elenco di tutti i clienti con contatti, numero di prenotazioni, ultima sessione e totale pagato, con la ricerca per nome, email o telefono. Nel riquadro a destra crei un <strong>nuovo cliente senza fissare un appuntamento</strong>: bastano nome ed email; il cliente riceve un'email di benvenuto con il link per scegliere la password e accedere alla sua area. Accanto a ogni cliente, "Nuovo appuntamento" apre il modulo già compilato.</p>
+
+<h2>2. Elenco più pulito: l'archivio</h2>
+<p>L'elenco mostra solo le prenotazioni attive. Le prenotazioni <strong>rifiutate, annullate e scadute</strong> stanno in <strong>Elenco → Archivio</strong>: non compaiono nel calendario né nelle statistiche. Dall'archivio puoi eliminare una prenotazione per sempre (pulsante "Elimina", anche nella scheda) oppure "Svuotare l'archivio" delle prenotazioni chiuse da più di 30 giorni. Le prenotazioni online abbandonate durante il pagamento si cancellano da sole dopo 7 giorni. Gli ordini e i pagamenti restano sempre in WooCommerce.</p>
+
+<h2>3 e 4. Statistiche e riepilogo economico</h2>
+<p>Nuova voce <strong>Prenotazioni → Statistiche</strong>. Scegli il periodo (per data della sessione: questo mese, quest'anno, anno scorso, da sempre o date libere) e, se vuoi, un solo pacchetto. In alto i totali, sotto la tabella per pacchetto:</p>
+<table>
+<tr><th>Colonna</th><th>Cosa conta</th></tr>
+<tr><td>Prenotazioni</td><td>Quante prenotazioni del pacchetto nel periodo (escluse quelle chiuse) e quante già svolte</td></tr>
+<tr><td>Valore</td><td>Somma dei prezzi delle prenotazioni</td></tr>
+<tr><td>Acconti</td><td>Quanto è stato incassato come acconto (online o in studio)</td></tr>
+<tr><td>Saldi</td><td>Quanto è stato incassato oltre l'acconto</td></tr>
+<tr><td>Da riscuotere</td><td>Acconti e saldi ancora dovuti</td></tr>
+</table>
+
+<h2>5. Acconto online per gli appuntamenti inseriti a mano</h2>
+<p>Prima il cliente inserito dallo studio poteva pagare online solo l'intero importo. Ora nella sua area privata trova due pulsanti: <strong>Paga l'acconto</strong> e <strong>Paga tutto</strong>. Appena paga l'acconto, la prenotazione risulta "con acconto" e il resto si salda come sempre, online o in studio.</p>
+
+<h2>6. Solleciti via email con link di pagamento</h2>
+<p>Nella scheda della prenotazione, riquadro <strong>Acconto e saldo</strong>: scegli "Acconto" o "Saldo", aggiungi se vuoi due righe personali e premi <strong>Invia sollecito con link di pagamento</strong>. Il cliente riceve un'email preimpostata con l'importo e il pulsante "Paga ora con carta". Con "Copia link" ottieni invece il link da incollare su WhatsApp. I testi delle email si cambiano in WooCommerce → Impostazioni → Email (voci "Photo Booking").</p>
+
+<h2>7. Scadenza della prenotazione senza pagamento</h2>
+<p>Per gli appuntamenti inseriti dallo studio senza alcun pagamento viene fissata una <strong>scadenza</strong> (3 giorni, modificabile in Impostazioni o direttamente nella scheda). Automaticamente:</p>
+<ul>
+  <li><strong>24 ore prima</strong> il cliente riceve un'email di promemoria con il link per pagare l'acconto;</li>
+  <li><strong>alla scadenza</strong>, se non è arrivato nulla, la prenotazione passa a "scaduta", la data torna libera nel calendario e sia tu che il cliente ricevete un'email.</li>
+</ul>
+<div class="box">Se preferisci tenere valida una prenotazione anche senza acconto, svuota il campo "Scadenza del pagamento" nella scheda e premi Salva.</div>
+
+<h2>8. Commissioni Stripe sui piccoli importi</h2>
+<p>Stripe applica alle carte italiane ed europee <strong>1,5% + 0,25 €</strong> per transazione (carte extra UE 3,25% + 0,25 €). La parte fissa pesa di più sugli importi piccoli:</p>
+<table>
+<tr><th>Importo</th><th>Commissione</th><th>Incidenza</th></tr>
+<tr><td>30 €</td><td>0,70 €</td><td>2,3%</td></tr>
+<tr><td>50 €</td><td>1,00 €</td><td>2,0%</td></tr>
+<tr><td>100 €</td><td>1,75 €</td><td>1,75%</td></tr>
+<tr><td>350 € in un'unica soluzione</td><td>5,50 €</td><td>1,57%</td></tr>
+<tr><td>350 € in acconto 100 € + saldo 250 €</td><td>5,75 €</td><td>1,64%</td></tr>
+</table>
+<p>In pratica: dividere in acconto e saldo costa 0,25 € in più per prenotazione; un acconto da 50 € "costa" 1 €. Conviene non scendere sotto i 50 € di acconto e incassare il saldo in studio quando possibile (nessuna commissione). Attenzione: in caso di rimborso Stripe <strong>non restituisce</strong> la commissione.</p>
+
+<h2>9. Permessi dell'account Studio</h2>
+<ul>
+  <li><strong>Utenti</strong>: dal menu Utenti l'account Studio aggiunge, modifica ed elimina i clienti. I nuovi utenti nascono sempre come clienti; gli account amministratori non sono visibili né modificabili.</li>
+  <li><strong>Manutenzione</strong>: nel Calendario, in alto a destra, l'interruttore <strong>Metti in manutenzione / Rimetti online</strong> mostra o toglie la pagina di cortesia per i visitatori (tu continui a vedere il sito).</li>
+</ul>
+</body>
+</html>
