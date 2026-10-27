@@ -55,34 +55,72 @@ $t = $stats['totals'];
 	$pkg_label = $product ? sprintf( __( 'prenotazioni di %s', 'photo-booking' ), wp_strip_all_tags( $stats['packages'] ? reset( $stats['packages'] )['name'] : '' ) ) : __( 'pacchetti prenotati', 'photo-booking' );
 	$period    = Time::format_date( $from . ' 00:00:00' ) . ' – ' . Time::format_date( $to . ' 00:00:00' );
 	?>
-	<div class="pb-box pb-summary-box">
-		<p class="pb-summary-period"><?php echo esc_html( sprintf( __( 'Sessioni dal %s', 'photo-booking' ), $period ) ); ?></p>
-		<?php if ( ! $t['bookings'] ) : ?>
-			<p class="pb-summary-line"><?php esc_html_e( 'Nessuna prenotazione nel periodo scelto.', 'photo-booking' ); ?></p>
-		<?php else : ?>
-			<p class="pb-summary-line"><?php echo wp_kses_post( sprintf( /* translators: 1 count 2 label */ __( 'Hai <strong>%1$d</strong> %2$s.', 'photo-booking' ), $t['bookings'], $pkg_label ) ); ?></p>
-			<p class="pb-summary-line">
-				<?php
-				$parts = array();
-				if ( $t['paid_count'] ) {
-					$parts[] = sprintf( _n( '<strong>%d</strong> ha saldato tutto', '<strong>%d</strong> hanno saldato tutto', $t['paid_count'], 'photo-booking' ), $t['paid_count'] );
-				}
-				if ( $t['deposit_count'] ) {
-					$parts[] = sprintf( _n( '<strong>%d</strong> ha dato l\'acconto', '<strong>%d</strong> hanno dato l\'acconto', $t['deposit_count'], 'photo-booking' ), $t['deposit_count'] );
-				}
-				if ( $t['unpaid_count'] ) {
-					$parts[] = sprintf( _n( '<strong>%d</strong> non ha ancora pagato nulla', '<strong>%d</strong> non hanno ancora pagato nulla', $t['unpaid_count'], 'photo-booking' ), $t['unpaid_count'] );
-				}
-				echo wp_kses_post( __( 'Di questi, ', 'photo-booking' ) . implode( __( ', ', 'photo-booking' ), $parts ) . '.' );
-				?>
-			</p>
-			<p class="pb-summary-line"><?php echo wp_kses_post( sprintf( /* translators: 1 collected 2 outstanding */ __( 'Hai incassato <strong>%1$s</strong>; da riscuotere hai ancora <strong class="pb-due">%2$s</strong>.', 'photo-booking' ), wc_price( $collected ), wc_price( $t['outstanding'] ) ) ); ?></p>
-			<p class="pb-summary-small"><?php echo wp_kses_post( sprintf( __( 'Valore totale delle prenotazioni %1$s (acconti %2$s + saldi %3$s già incassati). %4$d sessioni già svolte.', 'photo-booking' ), wc_price( $t['value'] ), wc_price( $t['deposits'] ), wc_price( $t['balances'] ), $t['completed'] ) ); ?></p>
-			<?php if ( $t['outstanding'] > 0 ) : ?>
-				<p class="pb-summary-small"><a href="<?php echo esc_url( admin_url( 'admin.php?page=pb-list&status=balance&when=all' ) ); ?>"><?php esc_html_e( 'Vedi chi deve ancora pagare →', 'photo-booking' ); ?></a></p>
-			<?php endif; ?>
-		<?php endif; ?>
+	<?php
+	// Donut: bookings by payment situation. Bar: money collected vs outstanding.
+	$donut = static function ( array $slices, $total ) {
+		$r = 54; $c = 2 * M_PI * $r; $offset = 0; $out = '';
+		foreach ( $slices as $sl ) {
+			if ( $sl['v'] <= 0 ) { continue; }
+			$len  = $c * $sl['v'] / max( 1, $total );
+			$out .= '<circle r="' . $r . '" cx="70" cy="70" fill="none" stroke="' . esc_attr( $sl['color'] ) . '" stroke-width="22" stroke-dasharray="' . esc_attr( round( $len, 2 ) . ' ' . round( $c - $len, 2 ) ) . '" stroke-dashoffset="' . esc_attr( round( -$offset, 2 ) ) . '" transform="rotate(-90 70 70)"><title>' . esc_html( $sl['label'] . ': ' . $sl['v'] ) . '</title></circle>';
+			$offset += $len;
+		}
+		return '<svg class="pb-donut" viewBox="0 0 140 140" width="140" height="140" role="img" aria-label="' . esc_attr__( 'Prenotazioni per stato del pagamento', 'photo-booking' ) . '">' . ( $out ? $out : '<circle r="54" cx="70" cy="70" fill="none" stroke="#e5e5e5" stroke-width="22"/>' ) . '<text x="70" y="66" text-anchor="middle" font-size="30" font-weight="600" fill="#1d2327">' . (int) $total . '</text><text x="70" y="86" text-anchor="middle" font-size="11" fill="#646970">' . esc_html__( 'prenotazioni', 'photo-booking' ) . '</text></svg>';
+	};
+	$slices = array(
+		array( 'label' => __( 'Hanno saldato tutto', 'photo-booking' ), 'v' => $t['paid_count'], 'color' => '#1e8a4c' ),
+		array( 'label' => __( 'Hanno dato l\'acconto', 'photo-booking' ), 'v' => $t['deposit_count'], 'color' => '#d9a400' ),
+		array( 'label' => __( 'Non hanno pagato nulla', 'photo-booking' ), 'v' => $t['unpaid_count'], 'color' => '#c0392b' ),
+	);
+	$collected = $t['deposits'] + $t['balances'];
+	$value     = max( 0.01, (float) $t['value'] );
+	$bars      = array(
+		array( 'label' => __( 'Acconti incassati', 'photo-booking' ), 'v' => $t['deposits'], 'color' => '#1e8a4c' ),
+		array( 'label' => __( 'Saldi incassati', 'photo-booking' ), 'v' => $t['balances'], 'color' => '#64b57d' ),
+		array( 'label' => __( 'Ancora da riscuotere', 'photo-booking' ), 'v' => $t['outstanding'], 'color' => '#c0392b' ),
+	);
+	$period = Time::format_date( $from . ' 00:00:00' ) . ' – ' . Time::format_date( $to . ' 00:00:00' );
+	?>
+	<p class="pb-summary-period"><?php echo esc_html( sprintf( __( 'Sessioni dal %s', 'photo-booking' ), $period ) ); ?><?php echo $product && $stats['packages'] ? esc_html( ' · ' . reset( $stats['packages'] )['name'] ) : ''; ?></p>
+	<?php if ( ! $t['bookings'] ) : ?>
+		<div class="pb-box pb-summary-box"><p class="pb-summary-line"><?php esc_html_e( 'Nessuna prenotazione nel periodo scelto.', 'photo-booking' ); ?></p></div>
+	<?php else : ?>
+	<div class="pb-summary-grid">
+		<div class="pb-box pb-summary-box">
+			<h2><?php esc_html_e( 'Prenotazioni', 'photo-booking' ); ?></h2>
+			<div class="pb-summary-chart">
+				<?php echo $donut( $slices, $t['bookings'] ); // phpcs:ignore ?>
+				<ul class="pb-legend-list">
+					<?php foreach ( $slices as $sl ) : ?>
+						<li><span class="pb-swatch" style="background:<?php echo esc_attr( $sl['color'] ); ?>"></span><strong><?php echo (int) $sl['v']; ?></strong> <?php echo esc_html( $sl['label'] ); ?><?php if ( $t['bookings'] ) : ?> <em>(<?php echo esc_html( round( 100 * $sl['v'] / $t['bookings'] ) ); ?>%)</em><?php endif; ?></li>
+					<?php endforeach; ?>
+				</ul>
+			</div>
+			<p class="pb-summary-small"><?php echo esc_html( sprintf( _n( '%d sessione già svolta.', '%d sessioni già svolte.', $t['completed'], 'photo-booking' ), $t['completed'] ) ); ?></p>
+		</div>
+
+		<div class="pb-box pb-summary-box">
+			<h2><?php esc_html_e( 'Soldi', 'photo-booking' ); ?></h2>
+			<div class="pb-money-big">
+				<div><span><?php esc_html_e( 'Incassato', 'photo-booking' ); ?></span><strong class="pb-ok"><?php echo esc_html( wp_strip_all_tags( wc_price( $collected ) ) ); ?></strong></div>
+				<div><span><?php esc_html_e( 'Da riscuotere', 'photo-booking' ); ?></span><strong class="pb-due"><?php echo esc_html( wp_strip_all_tags( wc_price( $t['outstanding'] ) ) ); ?></strong></div>
+				<div><span><?php esc_html_e( 'Valore totale', 'photo-booking' ); ?></span><strong><?php echo esc_html( wp_strip_all_tags( wc_price( $t['value'] ) ) ); ?></strong></div>
+			</div>
+			<div class="pb-bar" role="img" aria-label="<?php esc_attr_e( 'Incassato e da riscuotere sul valore totale', 'photo-booking' ); ?>">
+				<?php foreach ( $bars as $bar ) : ?>
+					<?php if ( $bar['v'] > 0 ) : ?><span style="width:<?php echo esc_attr( round( 100 * $bar['v'] / $value, 2 ) ); ?>%;background:<?php echo esc_attr( $bar['color'] ); ?>" title="<?php echo esc_attr( $bar['label'] . ': ' . wp_strip_all_tags( wc_price( $bar['v'] ) ) ); ?>"></span><?php endif; ?>
+				<?php endforeach; ?>
+			</div>
+			<ul class="pb-legend-list pb-legend-row">
+				<?php foreach ( $bars as $bar ) : ?>
+					<li><span class="pb-swatch" style="background:<?php echo esc_attr( $bar['color'] ); ?>"></span><?php echo esc_html( $bar['label'] ); ?> <strong><?php echo wp_kses_post( wc_price( $bar['v'] ) ); ?></strong> <em>(<?php echo esc_html( round( 100 * $bar['v'] / $value ) ); ?>%)</em></li>
+				<?php endforeach; ?>
+			</ul>
+			<p class="pb-summary-small"><?php echo esc_html( sprintf( __( 'Incassato %1$d%% del valore delle prenotazioni.', 'photo-booking' ), round( 100 * $collected / $value ) ) ); ?>
+			<?php if ( $t['outstanding'] > 0 ) : ?><a href="<?php echo esc_url( admin_url( 'admin.php?page=pb-list&status=balance&when=all' ) ); ?>"><?php esc_html_e( 'Vedi chi deve ancora pagare →', 'photo-booking' ); ?></a><?php endif; ?></p>
+		</div>
 	</div>
+	<?php endif; ?>
 	<?php endif; ?>
 
 	<?php if ( 'pacchetti' === $tab ) : ?>

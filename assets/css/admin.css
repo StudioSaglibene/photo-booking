@@ -112,3 +112,19 @@ details.pb-box[open] > summary { margin-bottom: 12px; }
 .pb-summary-period { margin: 0 0 8px; color: #646970; text-transform: uppercase; font-size: 11px; letter-spacing: .05em; }
 .pb-summary-line { font-size: 17px; line-height: 1.5; margin: 0 0 6px; }
 .pb-summary-small { color: #646970; margin: 10px 0 0; }
+
+.pb-summary-grid { display: grid; grid-template-columns: minmax(300px, 1fr) minmax(300px, 1.4fr); gap: 16px; align-items: start; max-width: 1100px; }
+@media (max-width: 1100px) { .pb-summary-grid { grid-template-columns: 1fr; } }
+.pb-summary-box h2 { margin: 0 0 12px; font-size: 15px; }
+.pb-summary-chart { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.pb-legend-list { margin: 0; list-style: none; font-size: 14px; }
+.pb-legend-list li { margin: 6px 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pb-legend-list em { color: #646970; font-style: normal; }
+.pb-legend-row { display: flex; flex-wrap: wrap; gap: 4px 22px; margin-top: 10px; }
+.pb-swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; flex: none; }
+.pb-money-big { display: flex; gap: 28px; flex-wrap: wrap; margin-bottom: 14px; }
+.pb-money-big span { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: #646970; }
+.pb-money-big strong { display: block; font-size: 26px; line-height: 1.2; white-space: nowrap; }
+.pb-money-big .pb-ok { color: #1e8a4c; }
+.pb-bar { display: flex; height: 28px; width: 100%; background: #eee; border-radius: 4px; overflow: hidden; }
+.pb-bar span { display: block; height: 100%; }

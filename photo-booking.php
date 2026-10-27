@@ -15,7 +15,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'PB_VERSION', '1.3.2' );
+define( 'PB_VERSION', '1.3.3' );
 define( 'PB_DB_VERSION', '2' );
 define( 'PB_FILE', __FILE__ );
 define( 'PB_DIR', plugin_dir_path( __FILE__ ) );
