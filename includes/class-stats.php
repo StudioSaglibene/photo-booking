@@ -40,8 +40,10 @@ class Stats {
 			}
 			$deposit_in = round( min( (float) $a->paid, (float) $a->deposit ), 2 );
 			$balance_in = round( max( 0, (float) $a->paid - $deposit_in ), 2 );
+			$situation = $a->balance_due() <= 0 ? 'paid_count' : ( (float) $a->paid > 0 ? 'deposit_count' : 'unpaid_count' );
 			foreach ( array( &$packages[ $pid ], &$totals ) as &$row ) {
 				$row['bookings']++;
+				$row[ $situation ]++;
 				if ( Appointment::COMPLETED === $a->status ) {
 					$row['completed']++;
 				}
@@ -73,6 +75,6 @@ class Stats {
 	}
 
 	private static function empty_row( $name ) {
-		return array( 'name' => $name, 'bookings' => 0, 'completed' => 0, 'value' => 0.0, 'deposits' => 0.0, 'balances' => 0.0, 'outstanding' => 0.0 );
+		return array( 'name' => $name, 'bookings' => 0, 'completed' => 0, 'paid_count' => 0, 'deposit_count' => 0, 'unpaid_count' => 0, 'value' => 0.0, 'deposits' => 0.0, 'balances' => 0.0, 'outstanding' => 0.0 );
 	}
 }

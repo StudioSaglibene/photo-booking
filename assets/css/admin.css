@@ -106,3 +106,9 @@ details.pb-box[open] > summary { margin-bottom: 12px; }
 .pb-maintenance { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px; }
 .pb-maintenance.is-on { border-left: 4px solid #b32d2e; }
 .pb-deadline-form { margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid #eee; }
+
+.pb-stats-tabs { margin: 10px 0 16px; }
+.pb-summary-box { padding: 22px 26px; max-width: 760px; }
+.pb-summary-period { margin: 0 0 8px; color: #646970; text-transform: uppercase; font-size: 11px; letter-spacing: .05em; }
+.pb-summary-line { font-size: 17px; line-height: 1.5; margin: 0 0 6px; }
+.pb-summary-small { color: #646970; margin: 10px 0 0; }

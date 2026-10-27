@@ -386,7 +386,8 @@ class Admin {
 		$product = absint( $_GET['product_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification
 		$from    = preg_match( '/^\d{4}-\d{2}-\d{2}$/', $from ) ? $from : Time::now()->format( 'Y' ) . '-01-01';
 		$to      = preg_match( '/^\d{4}-\d{2}-\d{2}$/', $to ) ? $to : Time::now()->format( 'Y' ) . '-12-31';
-		self::view( 'stats', array( 'from' => $from, 'to' => $to, 'product' => $product, 'stats' => Stats::compute( $from, $to, $product ), 'packages' => Package::all() ) );
+		$tab = 'pacchetti' === sanitize_key( $_GET['tab'] ?? '' ) ? 'pacchetti' : 'riepilogo'; // phpcs:ignore WordPress.Security.NonceVerification
+		self::view( 'stats', array( 'from' => $from, 'to' => $to, 'product' => $product, 'tab' => $tab, 'stats' => Stats::compute( $from, $to, $product ), 'packages' => Package::all() ) );
 	}
 
 	/** The Maintenance plugin (coming-soon page) is admin-only: the studio gets a plain on/off switch here. */
