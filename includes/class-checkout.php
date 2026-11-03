@@ -94,8 +94,8 @@ class Checkout {
 		$fields['billing']['billing_country']['label']      = '';
 		$fields['billing']['billing_cf'] = array(
 			'label'       => __( 'Codice fiscale', 'photo-booking' ),
-			'placeholder' => __( 'Per la ricevuta (facoltativo)', 'photo-booking' ),
-			'required'    => false,
+			'placeholder' => __( '16 caratteri, per la ricevuta', 'photo-booking' ),
+			'required'    => true,
 			'class'       => array( 'form-row-wide' ),
 			'priority'    => 85,
 			'maxlength'   => 16,
@@ -110,7 +110,11 @@ class Checkout {
 	/** Tax code: basic format check, saved on the order and on the customer. */
 	public static function validate_cf( $data, $errors ) {
 		$cf = strtoupper( trim( (string) ( $data['billing_cf'] ?? '' ) ) );
-		if ( '' !== $cf && ! preg_match( '/^[A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]$/', $cf ) && ! preg_match( '/^[0-9]{11}$/', $cf ) ) {
+		if ( '' === $cf ) {
+			$errors->add( 'billing_cf', __( 'Inserisci il codice fiscale: serve per la ricevuta.', 'photo-booking' ) );
+			return;
+		}
+		if ( ! preg_match( '/^[A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]$/', $cf ) && ! preg_match( '/^[0-9]{11}$/', $cf ) ) {
 			$errors->add( 'billing_cf', __( 'Il codice fiscale non sembra corretto: controlla i 16 caratteri.', 'photo-booking' ) );
 		}
 	}
