@@ -692,13 +692,49 @@ class Bookings {
 		global $wpdb;
 		$t   = Install::table( 'appointments' );
 		$ids = $wpdb->get_col( $wpdb->prepare( "SELECT id FROM {$t} WHERE status IN (%s,%s) AND paid <= 0 AND source <> 'admin' AND created_at < %s", Appointment::PENDING_PAYMENT, Appointment::EXPIRED, Time::now()->modify( '-' . max( 1, (int) $days ) . ' days' )->format( Time::DB ) ) ); // phpcs:ignore
+		$n = 0;
 		foreach ( $ids as $id ) {
 			$a = Appointment::get( $id );
-			if ( $a ) {
-				$a->delete();
+			if ( ! $a ) {
+				continue;
 			}
+			if ( $a->order_id && ( $o = wc_get_order( $a->order_id ) ) && ! $o->has_status( array( 'cancelled', 'failed', 'trash' ) ) ) {
+				continue; // The order is still alive (pending, or even paid): keep the booking row.
+			}
+			$a->delete();
+			$n++;
 		}
-		return count( $ids );
+		return $n;
+	}
+
+	/**
+	 * Booking created by the admin from a paid WooCommerce order that has no booking (e.g. the hold was deleted
+	 * before the customer paid from the order-pay link). The order's payment is recorded on the booking.
+	 *
+	 * @return Appointment|\WP_Error
+	 */
+	public static function link_order( Appointment $appt, \WC_Order $order ) {
+		if ( Cart::appointment_from_order( $order ) ) {
+			return new \WP_Error( 'pb', __( 'Questo ordine è già collegato a una prenotazione.', 'photo-booking' ) );
+		}
+		$order->update_meta_data( '_pb_appointment_id', $appt->id );
+		$order->update_meta_data( '_pb_order_type', 'main' );
+		$order->update_meta_data( '_pb_processed', 1 );
+		foreach ( $order->get_items() as $item ) {
+			$item->add_meta_data( '_pb_appointment_id', $appt->id, true );
+			$item->save();
+		}
+		$order->save();
+		$appt->update( array( 'order_id' => $order->get_id(), 'hold_expires_at' => null ) );
+		if ( Payments::order_is_paid( $order ) ) {
+			$type = (float) $order->get_total() + 0.009 >= (float) $appt->total ? 'full' : 'deposit';
+			Payments::record( $appt, $type, (float) $order->get_total(), $order->get_id(), $order->get_payment_method(), __( 'Collegato dall\'ordine', 'photo-booking' ) );
+			Payments::recalc( $appt );
+			Payments::sync_main_order_status( $appt );
+		}
+		$appt->log( 'payment', sprintf( 'Collegato all\'ordine #%d (%s): %s', $order->get_id(), $order->get_status(), wc_format_decimal( $order->get_total(), 2 ) ) );
+		$order->add_order_note( sprintf( 'Collegato alla prenotazione %s', $appt->number() ) );
+		return Appointment::get( $appt->id );
 	}
 
 	/** Closed bookings (rejected, cancelled, expired) older than $days: deleted for good, orders stay in WooCommerce. */

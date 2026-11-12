@@ -340,7 +340,16 @@ class Admin {
 		}
 		$has_more = count( $items ) > $per;
 		$items    = array_slice( $items, 0, $per );
-		self::view( 'list', compact( 'items', 'status', 'search', 'when', 'paged', 'has_more' ) );
+		$orphans = array();
+		if ( ! $status && 1 === $paged ) {
+			foreach ( Mailing::order_only_buyers() as $pid => $rows ) {
+				foreach ( $rows as $r ) {
+					$r['product'] = ( $p = wc_get_product( $pid ) ) ? $p->get_name() : '';
+					$orphans[]    = $r;
+				}
+			}
+		}
+		self::view( 'list', compact( 'items', 'status', 'search', 'when', 'paged', 'has_more', 'orphans' ) );
 	}
 
 	public static function page_appointment() {
@@ -364,12 +373,37 @@ class Admin {
 
 	public static function page_new() {
 		$customer = absint( $_GET['customer'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification
+		$order    = absint( $_GET['order'] ?? 0 ) ? wc_get_order( absint( $_GET['order'] ) ) : null; // phpcs:ignore WordPress.Security.NonceVerification
+		$from     = null;
+		if ( $order instanceof \WC_Order && ! \PhotoBooking\Cart::appointment_from_order( $order ) ) {
+			$pid = 0;
+			foreach ( $order->get_items() as $item ) {
+				$prod = $item->get_product();
+				$pid  = $prod ? ( $prod->get_parent_id() ? $prod->get_parent_id() : $prod->get_id() ) : 0;
+				if ( $pid && Package::config( $pid ) ) {
+					break;
+				}
+			}
+			$from = array(
+				'id'      => $order->get_id(),
+				'product' => $pid,
+				'total'   => (float) $order->get_total(),
+				'paid'    => Payments::order_is_paid( $order ),
+				'name'    => trim( $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() ),
+				'email'   => $order->get_billing_email(),
+				'phone'   => $order->get_billing_phone(),
+			);
+			if ( ! $customer ) {
+				$customer = (int) $order->get_customer_id();
+			}
+		}
 		self::view(
 			'new',
 			array(
 				'packages' => Package::all(),
 				'start'    => sanitize_text_field( wp_unslash( $_GET['start'] ?? '' ) ), // phpcs:ignore WordPress.Security.NonceVerification
 				'customer' => $customer ? Customers::row( $customer ) : null,
+				'order'    => $from,
 			)
 		);
 	}
@@ -638,6 +672,15 @@ class Admin {
 				$r    = self::create_manual( $post );
 				$ok   = __( 'Appuntamento creato.', 'photo-booking' );
 				if ( $r instanceof Appointment ) {
+					$order = ! empty( $post['order_id'] ) ? wc_get_order( absint( $post['order_id'] ) ) : null;
+					if ( $order instanceof \WC_Order ) {
+						$linked = Bookings::link_order( $r, $order );
+						if ( is_wp_error( $linked ) ) {
+							self::notice( 'warning', esc_html( $linked->get_error_message() ) );
+						} else {
+							$ok = sprintf( __( 'Appuntamento creato e collegato all\'ordine #%d: il pagamento dell\'ordine risulta sulla prenotazione.', 'photo-booking' ), $order->get_id() );
+						}
+					}
 					$back = $r->admin_url();
 				}
 				break;
@@ -753,7 +796,7 @@ class Admin {
 				'product_id'  => absint( $post['product_id'] ?? 0 ),
 				'start'       => $start,
 				'status'      => sanitize_key( $post['status'] ?? 'confirmed' ),
-				'payment'     => sanitize_key( $post['payment'] ?? 'none' ),
+				'payment'     => ! empty( $post['order_id'] ) ? 'none' : sanitize_key( $post['payment'] ?? 'none' ),
 				'cash_amount' => wc_format_decimal( $post['cash_amount'] ?? '' ),
 				'total'       => wc_format_decimal( $post['total'] ?? '' ),
 				'notes'       => sanitize_textarea_field( $post['notes'] ?? '' ),

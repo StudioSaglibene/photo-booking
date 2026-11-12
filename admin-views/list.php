@@ -6,6 +6,7 @@
  * @var string $when
  * @var int    $paged
  * @var bool   $has_more
+ * @var array  $orphans  paid package orders without a booking
  */
 
 use PhotoBooking\Admin\Admin;
@@ -30,6 +31,17 @@ $is_archive = 'archive' === $status;
 	<h1 class="wp-heading-inline"><?php esc_html_e( 'Prenotazioni', 'photo-booking' ); ?></h1>
 	<a href="<?php echo esc_url( admin_url( 'admin.php?page=pb-new' ) ); ?>" class="page-title-action"><?php esc_html_e( 'Nuovo appuntamento', 'photo-booking' ); ?></a>
 	<hr class="wp-header-end">
+
+	<?php if ( ! empty( $orphans ) ) : ?>
+		<div class="notice notice-warning inline pb-orphans"><p><strong><?php echo esc_html( sprintf( _n( '%d ordine pagato senza prenotazione in elenco.', '%d ordini pagati senza prenotazione in elenco.', count( $orphans ), 'photo-booking' ), count( $orphans ) ) ); ?></strong> <?php esc_html_e( 'Il cliente ha pagato ma la prenotazione non esiste (o è stata eliminata): creala dall\'ordine, il pagamento viene collegato in automatico.', 'photo-booking' ); ?></p>
+		<ul>
+			<?php foreach ( $orphans as $o ) : ?>
+				<li><?php echo esc_html( $o['name'] . ' · ' . $o['email'] . ' · ' . $o['product'] . ( $o['tier_name'] ? ' (' . $o['tier_name'] . ')' : '' ) . ' · ' . wp_strip_all_tags( wc_price( (float) wc_get_order( -$o['id'] )->get_total() ) ) ); ?>
+					<a class="button button-small" href="<?php echo esc_url( admin_url( 'admin.php?page=pb-new&order=' . ( -$o['id'] ) ) ); ?>"><?php esc_html_e( 'Crea prenotazione da questo ordine', 'photo-booking' ); ?></a>
+					<a href="<?php echo esc_url( admin_url( 'post.php?post=' . ( -$o['id'] ) . '&action=edit' ) ); ?>"><?php echo esc_html( sprintf( __( 'ordine #%d', 'photo-booking' ), -$o['id'] ) ); ?></a></li>
+			<?php endforeach; ?>
+		</ul></div>
+	<?php endif; ?>
 
 	<ul class="subsubsub">
 		<?php
