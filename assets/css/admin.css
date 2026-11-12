@@ -170,3 +170,11 @@ details.pb-box[open] > summary { margin-bottom: 12px; }
 .pb-mailing-summary { font-size: 14px; color: #b32d2e; }
 .pb-mailing-summary.is-ready { color: #1e8a4c; font-weight: 600; }
 .pb-mail-group.is-empty .pb-mail-group-head { opacity: .6; cursor: default; }
+
+.pb-mail-tier { border-top: 1px solid #e6e6e8; }
+.pb-mail-tier[hidden] { display: none; }
+.pb-mail-tier-head { display: flex; align-items: center; gap: 10px; padding: 8px 14px 8px 30px; background: #fbfbfc; cursor: pointer; margin: 0; }
+.pb-mail-tier-head input { margin: 0; }
+.pb-mail-tier-name { font-weight: 600; font-size: 13px; }
+.pb-mail-tier.is-empty .pb-mail-tier-head { opacity: .55; cursor: default; }
+.pb-mail-tier .pb-mail-row label { padding-left: 46px; }

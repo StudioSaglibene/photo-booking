@@ -10,16 +10,38 @@ defined( 'ABSPATH' ) || exit;
 class Mailing {
 
 	/**
-	 * Every package on offer, each with the customers who booked it (past and future, any live status).
-	 * Customers who only registered without booking never appear.
+	 * Every package on offer with its sub-packages, each with the customers who booked it (past and future,
+	 * any status that is a real purchase). Customers who only registered never appear.
 	 *
-	 * @return array product_id => [ name, rows => [ [id, name, email, date, tier, status] ] ]
+	 * @return array product_id => [ name, tiers => [ tier_key => [ name, rows => [ [id, name, email, date, status] ] ] ] ]
 	 */
 	public static function groups() {
 		$groups = array();
+		$seed   = static function ( $pid, $name ) use ( &$groups ) {
+			if ( ! isset( $groups[ $pid ] ) ) {
+				$groups[ $pid ] = array( 'name' => $name ?: __( 'Pacchetto non più in listino', 'photo-booking' ), 'tiers' => array() );
+			}
+		};
 		foreach ( Package::all() as $product ) {
-			$groups[ (int) $product->get_id() ] = array( 'name' => $product->get_name(), 'rows' => array(), 'emails' => array() );
+			$pid = (int) $product->get_id();
+			$seed( $pid, $product->get_name() );
+			foreach ( (array) ( Package::config( $product )['tiers'] ?? array() ) as $t ) {
+				$groups[ $pid ]['tiers'][ (string) $t['key'] ] = array( 'name' => $t['name'], 'rows' => array(), 'emails' => array() );
+			}
 		}
+		$add = static function ( $pid, $pname, $tier_key, $tier_name, array $row ) use ( &$groups, $seed ) {
+			$seed( $pid, $pname );
+			$tier_key = (string) $tier_key;
+			if ( ! isset( $groups[ $pid ]['tiers'][ $tier_key ] ) ) {
+				$groups[ $pid ]['tiers'][ $tier_key ] = array( 'name' => '' === $tier_key ? __( 'Senza sotto-pacchetto', 'photo-booking' ) : ( $tier_name ?: $tier_key ), 'rows' => array(), 'emails' => array() );
+			}
+			$key = strtolower( $row['email'] );
+			if ( isset( $groups[ $pid ]['tiers'][ $tier_key ]['emails'][ $key ] ) ) {
+				return; // One entry per customer per sub-package (the most recent booking).
+			}
+			$groups[ $pid ]['tiers'][ $tier_key ]['emails'][ $key ] = 1;
+			$groups[ $pid ]['tiers'][ $tier_key ]['rows'][]         = $row;
+		};
 		// Every booking except the ones that never became a purchase (unpaid holds, expired) or were closed (rejected, cancelled).
 		$list = Appointment::query(
 			array(
@@ -28,17 +50,6 @@ class Mailing {
 				'order'          => 'DESC',
 			)
 		);
-		$add = static function ( $pid, $name, array $row ) use ( &$groups ) {
-			if ( ! isset( $groups[ $pid ] ) ) {
-				$groups[ $pid ] = array( 'name' => $name ?: __( 'Pacchetto non più in listino', 'photo-booking' ), 'rows' => array(), 'emails' => array() );
-			}
-			$key = strtolower( $row['email'] );
-			if ( isset( $groups[ $pid ]['emails'][ $key ] ) ) {
-				return; // One entry per customer per package (the most recent booking).
-			}
-			$groups[ $pid ]['emails'][ $key ] = 1;
-			$groups[ $pid ]['rows'][]         = $row;
-		};
 		foreach ( $list as $a ) {
 			if ( ! is_email( $a->customer_email ) ) {
 				continue;
@@ -46,20 +57,16 @@ class Mailing {
 			$add(
 				(int) $a->product_id,
 				$a->package_name(),
-				array(
-					'id'     => $a->id,
-					'name'   => $a->customer_name,
-					'email'  => $a->customer_email,
-					'date'   => $a->start_at,
-					'tier'   => $a->get_meta( 'tier_name', '' ),
-					'status' => $a->status_label(),
-				)
+				$a->get_meta( 'tier', '' ),
+				$a->get_meta( 'tier_name', '' ),
+				array( 'id' => $a->id, 'name' => $a->customer_name, 'email' => $a->customer_email, 'date' => $a->start_at, 'status' => $a->status_label() )
 			);
 		}
 		// Paid WooCommerce orders for a package whose booking row is missing (e.g. deleted): the buyer is still a buyer.
 		foreach ( self::order_only_buyers() as $pid => $rows ) {
 			foreach ( $rows as $row ) {
-				$add( $pid, $groups[ $pid ]['name'] ?? ( ( $p = wc_get_product( $pid ) ) ? $p->get_name() : '' ), $row );
+				$p = wc_get_product( $pid );
+				$add( $pid, $p ? $p->get_name() : '', $row['tier_key'], $row['tier_name'], $row );
 			}
 		}
 		return $groups;
@@ -92,13 +99,23 @@ class Mailing {
 				if ( ! $pid || ! Package::config( $pid ) ) {
 					continue;
 				}
+				// The chosen sub-package travels on the order line as "Pacchetto: <name>".
+				$tier_name = (string) $item->get_meta( __( 'Pacchetto', 'photo-booking' ) );
+				$tier_key  = '';
+				foreach ( (array) ( Package::config( $pid )['tiers'] ?? array() ) as $t ) {
+					if ( $tier_name && 0 === strcasecmp( $t['name'], $tier_name ) ) {
+						$tier_key = (string) $t['key'];
+						break;
+					}
+				}
 				$out[ $pid ][] = array(
-					'id'     => -$order->get_id(),
-					'name'   => trim( $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() ) ?: $email,
-					'email'  => $email,
-					'date'   => $order->get_date_created() ? $order->get_date_created()->date( 'Y-m-d H:i:s' ) : '',
-					'tier'   => '',
-					'status' => sprintf( __( 'Ordine #%d', 'photo-booking' ), $order->get_id() ),
+					'id'        => -$order->get_id(),
+					'name'      => trim( $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() ) ?: $email,
+					'email'     => $email,
+					'date'      => $order->get_date_created() ? $order->get_date_created()->date( 'Y-m-d H:i:s' ) : '',
+					'tier_key'  => $tier_key,
+					'tier_name' => $tier_name,
+					'status'    => sprintf( __( 'Ordine #%d', 'photo-booking' ), $order->get_id() ),
 				);
 			}
 		}

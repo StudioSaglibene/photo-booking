@@ -11,7 +11,9 @@ defined( 'ABSPATH' ) || exit;
 
 $total = 0;
 foreach ( $groups as $g ) {
-	$total += count( $g['rows'] );
+	foreach ( $g['tiers'] as $tier ) {
+		$total += count( $tier['rows'] );
+	}
 }
 ?>
 <div class="wrap pb-wrap pb-mailing">
@@ -45,7 +47,7 @@ foreach ( $groups as $g ) {
 			<div class="pb-mailing-right">
 				<section class="pb-step pb-step-customers">
 					<h2><span class="pb-step-n">3</span> <?php esc_html_e( 'A chi inviarla', 'photo-booking' ); ?></h2>
-					<p class="description"><?php echo esc_html( sprintf( __( 'Tutti i pacchetti in listino e, dentro ciascuno, solo i clienti che lo hanno prenotato (%d in tutto, sessioni passate comprese). Chi ha prenotato più pacchetti compare in ciascun gruppo. Chi si è solo registrato senza prenotare non c\'è. Non compaiono le prenotazioni mai pagate, scadute, rifiutate o annullate.', 'photo-booking' ), $total ) ); ?></p>
+					<p class="description"><?php echo esc_html( sprintf( __( 'Tutti i pacchetti in listino e, dentro ciascuno, solo i clienti che lo hanno prenotato (%d in tutto, sessioni passate comprese), divisi per sotto-pacchetto. Spunta il pacchetto per prendere tutti i suoi clienti, oppure un solo sotto-pacchetto (es. Neve). Chi ha prenotato più pacchetti compare in ciascun gruppo. Chi si è solo registrato senza prenotare non c\'è. Non compaiono le prenotazioni mai pagate, scadute, rifiutate o annullate.', 'photo-booking' ), $total ) ); ?></p>
 
 					<div class="pb-search-row">
 						<input type="search" class="pb-mail-search" placeholder="<?php esc_attr_e( 'Cerca un cliente per nome o email…', 'photo-booking' ); ?>" aria-label="<?php esc_attr_e( 'Cerca cliente', 'photo-booking' ); ?>">
@@ -58,28 +60,44 @@ foreach ( $groups as $g ) {
 
 					<div class="pb-mail-groups">
 					<?php foreach ( $groups as $pid => $g ) : ?>
-						<div class="pb-mail-group <?php echo $g['rows'] ? '' : 'is-empty'; ?>" data-pb-group-box="<?php echo esc_attr( $pid ); ?>">
+						<?php
+						$n = 0;
+						foreach ( $g['tiers'] as $tier ) {
+							$n += count( $tier['rows'] );
+						}
+						?>
+						<div class="pb-mail-group <?php echo $n ? '' : 'is-empty'; ?>">
 							<label class="pb-mail-group-head">
-								<input type="checkbox" data-pb-group="<?php echo esc_attr( $pid ); ?>" <?php disabled( ! $g['rows'] ); ?>>
+								<input type="checkbox" data-pb-group="<?php echo esc_attr( $pid ); ?>" <?php disabled( ! $n ); ?>>
 								<span class="pb-mail-group-name"><?php echo esc_html( $g['name'] ); ?></span>
-								<span class="pb-mail-group-count"><?php echo $g['rows'] ? esc_html( sprintf( _n( '%d cliente', '%d clienti', count( $g['rows'] ), 'photo-booking' ), count( $g['rows'] ) ) ) : esc_html__( 'nessun cliente', 'photo-booking' ); ?></span>
+								<span class="pb-mail-group-count"><?php echo $n ? esc_html( sprintf( _n( '%d cliente', '%d clienti', $n, 'photo-booking' ), $n ) ) : esc_html__( 'nessun cliente', 'photo-booking' ); ?></span>
 							</label>
-							<?php if ( $g['rows'] ) : ?>
-							<ul class="pb-mail-list">
-								<?php foreach ( $g['rows'] as $r ) : ?>
-									<li class="pb-mail-row" data-pb-text="<?php echo esc_attr( strtolower( $r['name'] . ' ' . $r['email'] ) ); ?>">
-										<label>
-											<input type="checkbox" name="recipients[]" value="<?php echo esc_attr( $r['id'] ); ?>" data-pb-in="<?php echo esc_attr( $pid ); ?>">
-											<span class="pb-mail-who">
-												<strong><?php echo esc_html( $r['name'] ); ?></strong>
-												<small><?php echo esc_html( $r['email'] ); ?></small>
-											</span>
-											<span class="pb-mail-when"><?php echo esc_html( ucfirst( Time::format_date( $r['date'] ) ) ); ?><small><?php echo esc_html( $r['tier'] ? $r['tier'] . ' · ' . $r['status'] : $r['status'] ); ?></small></span>
-										</label>
-									</li>
-								<?php endforeach; ?>
-							</ul>
-							<?php endif; ?>
+							<?php foreach ( $g['tiers'] as $tkey => $tier ) : ?>
+								<?php $tid = $pid . ':' . $tkey; ?>
+								<div class="pb-mail-tier <?php echo $tier['rows'] ? '' : 'is-empty'; ?>">
+									<label class="pb-mail-tier-head">
+										<input type="checkbox" data-pb-tier="<?php echo esc_attr( $tid ); ?>" data-pb-tier-of="<?php echo esc_attr( $pid ); ?>" <?php disabled( ! $tier['rows'] ); ?>>
+										<span class="pb-mail-tier-name"><?php echo esc_html( $tier['name'] ); ?></span>
+										<span class="pb-mail-group-count"><?php echo $tier['rows'] ? esc_html( sprintf( _n( '%d cliente', '%d clienti', count( $tier['rows'] ), 'photo-booking' ), count( $tier['rows'] ) ) ) : esc_html__( 'nessun cliente', 'photo-booking' ); ?></span>
+									</label>
+									<?php if ( $tier['rows'] ) : ?>
+									<ul class="pb-mail-list">
+										<?php foreach ( $tier['rows'] as $r ) : ?>
+											<li class="pb-mail-row" data-pb-text="<?php echo esc_attr( strtolower( $r['name'] . ' ' . $r['email'] ) ); ?>">
+												<label>
+													<input type="checkbox" name="recipients[]" value="<?php echo esc_attr( $r['id'] ); ?>" data-pb-in="<?php echo esc_attr( $pid ); ?>" data-pb-tier-in="<?php echo esc_attr( $tid ); ?>">
+													<span class="pb-mail-who">
+														<strong><?php echo esc_html( $r['name'] ); ?></strong>
+														<small><?php echo esc_html( $r['email'] ); ?></small>
+													</span>
+													<span class="pb-mail-when"><?php echo esc_html( $r['date'] ? ucfirst( Time::format_date( $r['date'] ) ) : '' ); ?><small><?php echo esc_html( $r['status'] ); ?></small></span>
+												</label>
+											</li>
+										<?php endforeach; ?>
+									</ul>
+									<?php endif; ?>
+								</div>
+							<?php endforeach; ?>
 						</div>
 					<?php endforeach; ?>
 					</div>
@@ -113,27 +131,32 @@ foreach ( $groups as $g ) {
 		found: <?php echo wp_json_encode( __( '%d risultati', 'photo-booking' ) ); ?>,
 		nofile: <?php echo wp_json_encode( __( 'Nessun file scelto', 'photo-booking' ) ); ?>
 	};
+	function syncHead(head, selector) {
+		var items = form.querySelectorAll(selector);
+		var on = 0; items.forEach(function (b) { if (b.checked) { on++; } });
+		head.checked = items.length > 0 && on === items.length;
+		head.indeterminate = on > 0 && on < items.length;
+	}
 	function refresh() {
 		var n = 0;
 		form.querySelectorAll('input[name="recipients[]"]').forEach(function (b) { if (b.checked) { n++; } });
 		count.textContent = n === 0 ? t.none : (n === 1 ? t.one : t.many.replace('%d', n));
 		count.classList.toggle('is-ready', n > 0);
 		send.disabled = n === 0;
-		form.querySelectorAll('[data-pb-group]').forEach(function (g) {
-			var items = form.querySelectorAll('input[data-pb-in="' + g.getAttribute('data-pb-group') + '"]');
-			var on = 0; items.forEach(function (b) { if (b.checked) { on++; } });
-			g.checked = items.length > 0 && on === items.length;
-			g.indeterminate = on > 0 && on < items.length;
+		form.querySelectorAll('[data-pb-tier]').forEach(function (h) { syncHead(h, 'input[data-pb-tier-in="' + h.getAttribute('data-pb-tier') + '"]'); });
+		form.querySelectorAll('[data-pb-group]').forEach(function (h) { syncHead(h, 'input[data-pb-in="' + h.getAttribute('data-pb-group') + '"]'); });
+	}
+	function setAll(selector, value) {
+		form.querySelectorAll(selector).forEach(function (b) {
+			if (b.closest('.pb-mail-row').hidden) { return; } // only the names currently shown by the search
+			b.checked = value;
 		});
 	}
 	form.addEventListener('change', function (e) {
 		var g = e.target.getAttribute('data-pb-group');
-		if (g !== null) {
-			form.querySelectorAll('input[data-pb-in="' + g + '"]').forEach(function (b) {
-				if (b.closest('.pb-mail-row').hidden) { return; } // only the names currently shown by the search
-				b.checked = e.target.checked;
-			});
-		}
+		var tier = e.target.getAttribute('data-pb-tier');
+		if (g !== null) { setAll('input[data-pb-in="' + g + '"]', e.target.checked); }       // whole package: every sub-package
+		if (tier !== null) { setAll('input[data-pb-tier-in="' + tier + '"]', e.target.checked); } // one sub-package only
 		refresh();
 	});
 	form.querySelectorAll('[data-pb-all]').forEach(function (a) {
@@ -150,6 +173,9 @@ foreach ( $groups as $g ) {
 		form.querySelectorAll('.pb-mail-row').forEach(function (row) {
 			var hit = !q || row.getAttribute('data-pb-text').indexOf(q) !== -1;
 			row.hidden = !hit; if (hit) { found++; }
+		});
+		form.querySelectorAll('.pb-mail-tier').forEach(function (box) {
+			box.hidden = !!q && box.querySelectorAll('.pb-mail-row:not([hidden])').length === 0;
 		});
 		form.querySelectorAll('.pb-mail-group').forEach(function (box) {
 			box.hidden = !!q && box.querySelectorAll('.pb-mail-row:not([hidden])').length === 0;
