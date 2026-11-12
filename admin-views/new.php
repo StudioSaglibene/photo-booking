@@ -68,7 +68,8 @@ $time = $start && strlen( $start ) >= 16 ? substr( $start, 11, 5 ) : '';
 					<p>
 						<label><input type="radio" name="payment" value="none" checked> <?php esc_html_e( 'Nessun pagamento ancora', 'photo-booking' ); ?></label><br>
 						<label><input type="radio" name="payment" value="deposit_cash"> <?php esc_html_e( 'Acconto ricevuto in contanti', 'photo-booking' ); ?></label><br>
-						<label><input type="radio" name="payment" value="full_cash"> <?php esc_html_e( 'Intero importo ricevuto in contanti', 'photo-booking' ); ?></label>
+						<label><input type="radio" name="payment" value="full_cash"> <?php esc_html_e( 'Intero importo ricevuto in contanti', 'photo-booking' ); ?></label><br>
+						<label><input type="radio" name="payment" value="gift"> <?php esc_html_e( 'Omaggio: nessun pagamento dovuto (ordine a 0 €)', 'photo-booking' ); ?></label>
 					</p>
 					<p><label><?php esc_html_e( 'Importo acconto (vuoto = acconto del pacchetto)', 'photo-booking' ); ?><br><input type="number" step="0.01" name="cash_amount"></label></p>
 					<p class="description"><?php esc_html_e( 'Il cliente potrà pagare online quanto resta dalla sua area privata.', 'photo-booking' ); ?></p>

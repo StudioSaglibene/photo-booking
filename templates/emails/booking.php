@@ -28,7 +28,12 @@ foreach ( array_filter( explode( "\n", (string) $intro ) ) as $line ) {
 	echo '<p>' . wp_kses_post( $line ) . '</p>';
 }
 
-if ( ! empty( $extra['message'] ) ) {
+if ( 'bulk' === $key && ! empty( $extra['message'] ) ) {
+	echo wp_kses_post( wpautop( esc_html( $extra['message'] ) ) );
+	if ( ! empty( $extra['attachment'] ) ) {
+		echo '<p style="font-size:13px;color:#7b6d64;">' . esc_html( sprintf( __( 'In allegato: %s', 'photo-booking' ), basename( $extra['attachment'] ) ) ) . '</p>';
+	}
+} elseif ( ! empty( $extra['message'] ) ) {
 	echo '<blockquote style="margin:16px 0;padding:12px 16px;border-left:3px solid #141414;background:#f2eee8;">' . wp_kses_post( nl2br( esc_html( $extra['message'] ) ) ) . '</blockquote>';
 }
 
@@ -91,7 +96,7 @@ if ( in_array( $key, array( 'rescheduled', 'rescheduled_pending', 'admin_custome
 }
 
 // Appointment details.
-if ( $appointment && ! in_array( $key, array( 'credit_issued' ), true ) ) {
+if ( $appointment && ! in_array( $key, array( 'credit_issued', 'bulk' ), true ) ) {
 	$rows = array(
 		__( 'Prenotazione', 'photo-booking' ) => $appointment->number(),
 		__( 'Pacchetto', 'photo-booking' )    => $appointment->package_name(),

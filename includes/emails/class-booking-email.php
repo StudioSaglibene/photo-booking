@@ -42,6 +42,7 @@ class Booking_Email extends \WC_Email {
 			'{expires}'            => '',
 			'{amount}'             => '',
 			'{deadline}'           => '',
+			'{subject}'            => '',
 		);
 		parent::__construct();
 		if ( ! $this->customer_email ) {
@@ -107,6 +108,9 @@ class Booking_Email extends \WC_Email {
 		}
 		if ( isset( $extra['amount'] ) ) {
 			$this->placeholders['{amount}'] = html_entity_decode( wp_strip_all_tags( wc_price( $extra['amount'] ) ), ENT_QUOTES, 'UTF-8' );
+		}
+		if ( ! empty( $extra['subject'] ) ) {
+			$this->placeholders['{subject}'] = (string) $extra['subject'];
 		}
 		if ( ! empty( $extra['deadline'] ) ) {
 			$d = $extra['deadline'];

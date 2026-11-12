@@ -6,6 +6,7 @@ use PhotoBooking\Availability;
 use PhotoBooking\Bookings;
 use PhotoBooking\Cron;
 use PhotoBooking\Customers;
+use PhotoBooking\Mailing;
 use PhotoBooking\Stats;
 use PhotoBooking\Time;
 use PhotoBooking\Deliveries;
@@ -57,6 +58,7 @@ class Admin {
 		add_submenu_page( 'pb-calendar', __( 'Nuovo appuntamento', 'photo-booking' ), __( 'Nuovo appuntamento', 'photo-booking' ), Install::CAP, 'pb-new', array( __CLASS__, 'page_new' ) );
 		add_submenu_page( 'pb-calendar', __( 'Clienti', 'photo-booking' ), __( 'Clienti', 'photo-booking' ), Install::CAP, 'pb-customers', array( __CLASS__, 'page_customers' ) );
 		add_submenu_page( 'pb-calendar', __( 'Statistiche', 'photo-booking' ), __( 'Statistiche', 'photo-booking' ), Install::CAP, 'pb-stats', array( __CLASS__, 'page_stats' ) );
+		add_submenu_page( 'pb-calendar', __( 'Invio PDF ai clienti', 'photo-booking' ), __( 'Invio PDF', 'photo-booking' ), Install::CAP, 'pb-mailing', array( __CLASS__, 'page_mailing' ) );
 		add_submenu_page( 'pb-calendar', __( 'Consegne', 'photo-booking' ), __( 'Consegne', 'photo-booking' ), Install::CAP, 'pb-deliveries', array( __CLASS__, 'page_deliveries' ) );
 		add_submenu_page( 'pb-calendar', __( 'Pacchetti', 'photo-booking' ), __( 'Pacchetti', 'photo-booking' ), 'edit_products', 'edit.php?post_type=product&product_type=' . Package::TYPE );
 		add_submenu_page( 'pb-calendar', __( 'Impostazioni', 'photo-booking' ), __( 'Impostazioni', 'photo-booking' ), 'manage_options', 'pb-settings', array( __CLASS__, 'page_settings' ) );
@@ -372,6 +374,11 @@ class Admin {
 		);
 	}
 
+	public static function page_mailing() {
+		$past = ! empty( $_GET['past'] ); // phpcs:ignore WordPress.Security.NonceVerification
+		self::view( 'mailing', array( 'groups' => Mailing::groups( $past ), 'past' => $past, 'last' => get_option( 'pb_last_mailing' ) ) );
+	}
+
 	public static function page_customers() {
 		$search = sanitize_text_field( wp_unslash( $_GET['s'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification
 		$paged  = max( 1, absint( $_GET['paged'] ?? 1 ) ); // phpcs:ignore WordPress.Security.NonceVerification
@@ -587,6 +594,13 @@ class Admin {
 				if ( ! is_wp_error( $r ) ) {
 					$ok   = __( 'Cliente creato.', 'photo-booking' ) . ( ! empty( $post['welcome'] ) ? ' ' . __( 'Email di benvenuto inviata con il link per scegliere la password.', 'photo-booking' ) : '' );
 					$back = admin_url( 'admin.php?page=pb-customers&s=' . rawurlencode( sanitize_email( $post['email'] ?? '' ) ) );
+				}
+				break;
+
+			case 'mailing':
+				$r = Mailing::send( $post, $_FILES['pdf'] ?? array() ); // phpcs:ignore WordPress.Security.NonceVerification
+				if ( ! is_wp_error( $r ) ) {
+					$ok = sprintf( _n( 'Email inviata a %d cliente con il PDF allegato.', 'Email inviata a %d clienti con il PDF allegato.', $r, 'photo-booking' ), $r );
 				}
 				break;
 

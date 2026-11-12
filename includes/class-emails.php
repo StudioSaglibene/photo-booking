@@ -11,7 +11,7 @@ class Emails {
 
 	public static function init() {
 		add_filter( 'woocommerce_email_styles', array( __CLASS__, 'email_styles' ) );
-		add_filter( 'woocommerce_email_attachments', array( __CLASS__, 'attachments' ), 10, 3 );
+		add_filter( 'woocommerce_email_attachments', array( __CLASS__, 'attachments' ), 10, 4 );
 		add_filter( 'woocommerce_email_classes', array( __CLASS__, 'register' ) );
 	}
 
@@ -117,6 +117,14 @@ class Emails {
 				'heading' => 'Prenotazione scaduta',
 				'intro'   => "Ciao {customer_name},\nnon abbiamo ricevuto il pagamento dell'acconto entro il {deadline}, quindi la prenotazione per {package} del {date} alle {time} è scaduta e la data è di nuovo libera.\nSe vuoi ancora la sessione, prenota di nuovo online o scrivici: saremo felici di trovare una data.",
 				'button'  => 'book',
+			),
+			'bulk'               => array(
+				'to'      => 'customer',
+				'title'   => 'Comunicazione ai clienti con PDF (Invio PDF)',
+				'subject' => '{subject}',
+				'heading' => '{subject}',
+				'intro'   => 'Ciao {customer_name},',
+				'button'  => 'account',
 			),
 			'reminder'           => array(
 				'to'      => 'customer',
@@ -262,7 +270,11 @@ class Emails {
 	/**
 	 * Confirmation email: attach the package's own PDF sheet, or a generated one with the details of this booking.
 	 */
-	public static function attachments( $attachments, $email_id, $object ) {
+	public static function attachments( $attachments, $email_id, $object, $email = null ) {
+		if ( 'pb_bulk' === $email_id && $email && ! empty( $email->extra['attachment'] ) && file_exists( $email->extra['attachment'] ) ) {
+			$attachments[] = $email->extra['attachment'];
+			return $attachments;
+		}
 		if ( 'pb_confirmed' !== $email_id || ! $object instanceof Appointment ) {
 			return $attachments;
 		}

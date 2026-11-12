@@ -171,7 +171,8 @@ class Bookings {
 				if ( ! $force && ! Availability::is_free( $start->format( Time::DB ), $busy->format( Time::DB ) ) ) {
 					return new \WP_Error( 'pb_slot', __( 'L\'orario si sovrappone a un altro appuntamento o a un blocco. Spunta "forza" per inserirlo comunque.', 'photo-booking' ) );
 				}
-				$total = isset( $data['total'] ) && '' !== $data['total'] ? (float) $data['total'] : $cfg['price'];
+				$gift  = 'gift' === ( $data['payment'] ?? '' );
+				$total = $gift ? 0 : ( isset( $data['total'] ) && '' !== $data['total'] ? (float) $data['total'] : $cfg['price'] );
 				$appt  = Appointment::create(
 					array(
 						'customer_id'    => (int) $data['customer_id'],
@@ -185,14 +186,15 @@ class Bookings {
 						'status'         => in_array( $data['status'] ?? '', array( Appointment::PENDING, Appointment::CONFIRMED ), true ) ? $data['status'] : Appointment::CONFIRMED,
 						'payment_mode'   => 'deposit',
 						'total'          => $total,
-						'deposit'        => $cfg['deposit'],
+						'deposit'        => $gift ? 0 : $cfg['deposit'],
+						'payment_status' => $gift ? Appointment::PAY_PAID : Appointment::PAY_UNPAID,
 						'source'         => 'admin',
 						'customer_notes' => $data['notes'] ?? '',
 						'hold_expires_at' => 'none' === ( $data['payment'] ?? 'none' ) && (int) Settings::get( 'manual_payment_days' ) > 0 ? Time::now()->modify( '+' . (int) Settings::get( 'manual_payment_days' ) . ' days' )->setTime( 23, 59, 0 )->format( Time::DB ) : null,
-						'meta'           => array( 'product_name' => $cfg['name'] ),
+						'meta'           => array( 'product_name' => $cfg['name'], 'gift' => $gift ? 1 : 0 ),
 					)
 				);
-				$appt->log( 'created', 'Appuntamento creato manualmente' . ( $force ? ' (sovrapposizione forzata)' : '' ) );
+				$appt->log( 'created', 'Appuntamento creato manualmente' . ( $gift ? ' come omaggio' : '' ) . ( $force ? ' (sovrapposizione forzata)' : '' ) );
 				return $appt;
 			}
 		);
@@ -209,6 +211,12 @@ class Bookings {
 			$order = Payments::cash_payment( $appt, $amount, __( 'Registrato alla creazione', 'photo-booking' ) );
 			if ( ! is_wp_error( $order ) ) {
 				$appt->update( array( 'order_id' => $order->get_id() ) );
+			}
+		} elseif ( 'gift' === ( $data['payment'] ?? '' ) ) {
+			$order = Payments::gift_order( $appt );
+			if ( ! is_wp_error( $order ) ) {
+				$appt->update( array( 'order_id' => $order->get_id() ) );
+				$appt->log( 'payment', sprintf( 'Omaggio: ordine #%d a 0 €', $order->get_id() ) );
 			}
 		}
 		if ( ! empty( $data['notify'] ) ) {

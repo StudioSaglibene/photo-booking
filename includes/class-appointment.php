@@ -144,6 +144,9 @@ class Appointment {
 	}
 
 	public function payment_label() {
+		if ( $this->get_meta( 'gift' ) ) {
+			return __( 'Omaggio', 'photo-booking' );
+		}
 		$l = self::payment_labels();
 		return $l[ $this->payment_status ] ?? $this->payment_status;
 	}

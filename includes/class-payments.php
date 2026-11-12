@@ -86,7 +86,9 @@ class Payments {
 		$paid    = round( max( 0, $paid ), 2 );
 		$changes = array( 'paid' => $paid );
 		if ( ! $appt->is_closed() ) {
-			if ( $paid <= 0 ) {
+			if ( (float) $appt->total <= 0 ) {
+				$changes['payment_status'] = Appointment::PAY_PAID; // Gift: nothing to pay.
+			} elseif ( $paid <= 0 ) {
 				$changes['payment_status'] = Appointment::PAY_UNPAID;
 			} elseif ( $paid + 0.009 >= $appt->total ) {
 				$changes['payment_status'] = Appointment::PAY_PAID;
@@ -156,6 +158,20 @@ class Payments {
 		return $order;
 	}
 
+	/** A completed order at 0 € so the gift shows up among the WooCommerce orders. */
+	public static function gift_order( Appointment $appt ) {
+		$order = self::create_order( $appt, 0, 'gift' );
+		if ( is_wp_error( $order ) ) {
+			return $order;
+		}
+		$order->set_payment_method( 'pb_gift' );
+		$order->set_payment_method_title( __( 'Omaggio', 'photo-booking' ) );
+		$order->update_meta_data( '_pb_processed', 1 );
+		$order->set_status( 'completed', __( 'Sessione omaggiata dallo studio.', 'photo-booking' ) );
+		$order->save();
+		return $order;
+	}
+
 	/**
 	 * Register a cash payment received in the studio.
 	 *
@@ -201,7 +217,7 @@ class Payments {
 			return $order;
 		}
 		$product = $appt->product();
-		$labels  = array( 'cash' => __( 'Pagamento in sede', 'photo-booking' ), 'deposit' => __( 'Acconto', 'photo-booking' ), 'balance' => __( 'Saldo', 'photo-booking' ) );
+		$labels  = array( 'cash' => __( 'Pagamento in sede', 'photo-booking' ), 'deposit' => __( 'Acconto', 'photo-booking' ), 'balance' => __( 'Saldo', 'photo-booking' ), 'gift' => __( 'Omaggio', 'photo-booking' ) );
 		$name    = ( $labels[ $kind ] ?? $labels['balance'] ) . ' – ' . $appt->package_name() . ' (' . $appt->number() . ')';
 		$net     = $amount;
 		if ( $product && wc_tax_enabled() && wc_prices_include_tax() ) {
