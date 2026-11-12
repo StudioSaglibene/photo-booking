@@ -10,9 +10,10 @@ defined( 'ABSPATH' ) || exit;
 
 class Customers {
 
-	/** Roles that count as customers of the studio. */
+	/** Everyone who is not staff counts as a customer, whatever role the account ended up with. */
 	public static function roles() {
-		return array( 'customer', 'subscriber' );
+		$staff = array( 'administrator', 'shop_manager', 'editor', 'author', 'contributor', Install::ROLE );
+		return array_values( array_diff( array_keys( wp_roles()->roles ), $staff ) );
 	}
 
 	/** One row for the lists: id, name, email, phone, bookings, last (start_at of the latest booking), registered. */

@@ -45,7 +45,7 @@ foreach ( $groups as $g ) {
 			<div class="pb-mailing-right">
 				<section class="pb-step pb-step-customers">
 					<h2><span class="pb-step-n">3</span> <?php esc_html_e( 'A chi inviarla', 'photo-booking' ); ?></h2>
-					<p class="description"><?php echo esc_html( sprintf( __( 'Tutti i pacchetti in listino e, dentro ciascuno, solo i clienti che lo hanno prenotato (%d in tutto, sessioni passate comprese). Chi ha prenotato più pacchetti compare in ciascun gruppo. Chi si è solo registrato senza prenotare non c\'è.', 'photo-booking' ), $total ) ); ?></p>
+					<p class="description"><?php echo esc_html( sprintf( __( 'Tutti i pacchetti in listino e, dentro ciascuno, solo i clienti che lo hanno prenotato (%d in tutto, sessioni passate comprese). Chi ha prenotato più pacchetti compare in ciascun gruppo. Chi si è solo registrato senza prenotare non c\'è. Non compaiono le prenotazioni mai pagate, scadute, rifiutate o annullate.', 'photo-booking' ), $total ) ); ?></p>
 
 					<div class="pb-search-row">
 						<input type="search" class="pb-mail-search" placeholder="<?php esc_attr_e( 'Cerca un cliente per nome o email…', 'photo-booking' ); ?>" aria-label="<?php esc_attr_e( 'Cerca cliente', 'photo-booking' ); ?>">
