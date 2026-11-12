@@ -10,32 +10,34 @@ defined( 'ABSPATH' ) || exit;
 class Mailing {
 
 	/**
-	 * Customers with a live booking, grouped by package.
+	 * Every package on offer, each with the customers who booked it (past and future, any live status).
+	 * Customers who only registered without booking never appear.
 	 *
-	 * @param bool $past Include sessions already held (otherwise only from today on).
 	 * @return array product_id => [ name, rows => [ [id, name, email, date, tier, status] ] ]
 	 */
-	public static function groups( $past = false ) {
-		$args = array(
-			'status'  => array( Appointment::PENDING, Appointment::PROPOSED, Appointment::CONFIRMED, Appointment::COMPLETED ),
-			'orderby' => 'start_at',
-		);
-		if ( ! $past ) {
-			$args['from'] = Time::now()->setTime( 0, 0 )->format( Time::DB );
-		}
+	public static function groups() {
 		$groups = array();
-		foreach ( Appointment::query( $args ) as $a ) {
+		foreach ( Package::all() as $product ) {
+			$groups[ (int) $product->get_id() ] = array( 'name' => $product->get_name(), 'rows' => array(), 'emails' => array() );
+		}
+		$list = Appointment::query(
+			array(
+				'status'  => array( Appointment::PENDING, Appointment::PROPOSED, Appointment::CONFIRMED, Appointment::COMPLETED ),
+				'orderby' => 'start_at',
+				'order'   => 'DESC',
+			)
+		);
+		foreach ( $list as $a ) {
 			if ( ! is_email( $a->customer_email ) ) {
 				continue;
 			}
 			$pid = (int) $a->product_id;
 			if ( ! isset( $groups[ $pid ] ) ) {
-				$product         = $a->product();
-				$groups[ $pid ]  = array( 'name' => $product ? $product->get_name() : $a->package_name(), 'rows' => array(), 'emails' => array() );
+				$groups[ $pid ] = array( 'name' => $a->package_name() ?: __( 'Pacchetto non più in listino', 'photo-booking' ), 'rows' => array(), 'emails' => array() );
 			}
 			$key = strtolower( $a->customer_email );
 			if ( isset( $groups[ $pid ]['emails'][ $key ] ) ) {
-				continue; // One email per customer per package.
+				continue; // One entry per customer per package (the most recent booking).
 			}
 			$groups[ $pid ]['emails'][ $key ] = 1;
 			$groups[ $pid ]['rows'][]         = array(
@@ -47,12 +49,6 @@ class Mailing {
 				'status' => $a->status_label(),
 			);
 		}
-		uasort(
-			$groups,
-			static function ( $x, $y ) {
-				return strcasecmp( $x['name'], $y['name'] );
-			}
-		);
 		return $groups;
 	}
 

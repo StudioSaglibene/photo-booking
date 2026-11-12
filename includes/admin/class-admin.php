@@ -375,8 +375,7 @@ class Admin {
 	}
 
 	public static function page_mailing() {
-		$past = ! empty( $_GET['past'] ); // phpcs:ignore WordPress.Security.NonceVerification
-		self::view( 'mailing', array( 'groups' => Mailing::groups( $past ), 'past' => $past, 'last' => get_option( 'pb_last_mailing' ) ) );
+		self::view( 'mailing', array( 'groups' => Mailing::groups(), 'last' => get_option( 'pb_last_mailing' ) ) );
 	}
 
 	public static function page_customers() {
