@@ -74,8 +74,11 @@ class Mailing {
 		if ( ! function_exists( 'wc_get_orders' ) ) {
 			return $out;
 		}
-		$orders = wc_get_orders( array( 'limit' => 500, 'status' => array( 'wc-processing', 'wc-completed', 'wc-pb-deposit' ), 'orderby' => 'date', 'order' => 'DESC' ) );
+		$orders = wc_get_orders( array( 'type' => 'shop_order', 'limit' => 500, 'status' => array( 'wc-processing', 'wc-completed', 'wc-pb-deposit' ), 'orderby' => 'date', 'order' => 'DESC' ) );
 		foreach ( $orders as $order ) {
+			if ( ! $order instanceof \WC_Order || $order->get_parent_id() ) {
+				continue; // Refunds and other order types are not purchases.
+			}
 			if ( Cart::appointment_from_order( $order ) ) {
 				continue;
 			}
